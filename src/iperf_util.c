@@ -119,9 +119,9 @@ int
 timeval_equals(struct timeval * tv0, struct timeval * tv1)
 {
     if ( tv0->tv_sec == tv1->tv_sec && tv0->tv_usec == tv1->tv_usec )
-	return 1;
+        return 1;
     else
-	return 0;
+        return 0;
 }
 
 double
@@ -191,7 +191,7 @@ cpu_util(double pcpu[3])
     if (pcpu == NULL) {
         gettimeofday(&last, NULL);
         clast = clock();
-	getrusage(RUSAGE_SELF, &rlast);
+        getrusage(RUSAGE_SELF, &rlast);
         return;
     }
 
@@ -221,7 +221,7 @@ get_system_info(void)
     uname(&uts);
 
     snprintf(buf, sizeof(buf), "%s %s %s %s %s", uts.sysname, uts.nodename,
-	     uts.release, uts.version, uts.machine);
+             uts.release, uts.version, uts.machine);
 
     return buf;
 }
@@ -237,67 +237,67 @@ get_optional_features(void)
 
 #if defined(HAVE_CPU_AFFINITY)
     if (numfeatures > 0) {
-	strncat(features, ", ",
-		sizeof(features) - strlen(features) - 1);
+        strncat(features, ", ",
+                sizeof(features) - strlen(features) - 1);
     }
     strncat(features, "CPU affinity setting",
-	sizeof(features) - strlen(features) - 1);
+        sizeof(features) - strlen(features) - 1);
     numfeatures++;
 #endif /* HAVE_CPU_AFFINITY */
 
 #if defined(HAVE_FLOWLABEL)
     if (numfeatures > 0) {
-	strncat(features, ", ",
-		sizeof(features) - strlen(features) - 1);
+        strncat(features, ", ",
+                sizeof(features) - strlen(features) - 1);
     }
     strncat(features, "IPv6 flow label",
-	sizeof(features) - strlen(features) - 1);
+        sizeof(features) - strlen(features) - 1);
     numfeatures++;
 #endif /* HAVE_FLOWLABEL */
 
 #if defined(HAVE_SCTP)
     if (numfeatures > 0) {
-	strncat(features, ", ",
-		sizeof(features) - strlen(features) - 1);
+        strncat(features, ", ",
+                sizeof(features) - strlen(features) - 1);
     }
     strncat(features, "SCTP",
-	sizeof(features) - strlen(features) - 1);
+        sizeof(features) - strlen(features) - 1);
     numfeatures++;
 #endif /* HAVE_SCTP */
 
 #if defined(HAVE_TCP_CONGESTION)
     if (numfeatures > 0) {
-	strncat(features, ", ",
-		sizeof(features) - strlen(features) - 1);
+        strncat(features, ", ",
+                sizeof(features) - strlen(features) - 1);
     }
     strncat(features, "TCP congestion algorithm setting",
-	sizeof(features) - strlen(features) - 1);
+        sizeof(features) - strlen(features) - 1);
     numfeatures++;
 #endif /* HAVE_TCP_CONGESTION */
 
 #if defined(HAVE_SENDFILE)
     if (numfeatures > 0) {
-	strncat(features, ", ",
-		sizeof(features) - strlen(features) - 1);
+        strncat(features, ", ",
+                sizeof(features) - strlen(features) - 1);
     }
     strncat(features, "sendfile / zerocopy",
-	sizeof(features) - strlen(features) - 1);
+        sizeof(features) - strlen(features) - 1);
     numfeatures++;
 #endif /* HAVE_SENDFILE */
 
 #if defined(HAVE_SO_MAX_PACING_RATE)
     if (numfeatures > 0) {
-	strncat(features, ", ",
-		sizeof(features) - strlen(features) - 1);
+        strncat(features, ", ",
+                sizeof(features) - strlen(features) - 1);
     }
     strncat(features, "socket pacing",
-	sizeof(features) - strlen(features) - 1);
+        sizeof(features) - strlen(features) - 1);
     numfeatures++;
 #endif /* HAVE_SO_MAX_PACING_RATE */
 
     if (numfeatures == 0) {
-	strncat(features, "None",
-		sizeof(features) - strlen(features) - 1);
+        strncat(features, "None",
+                sizeof(features) - strlen(features) - 1);
     }
 
     return features;
@@ -337,42 +337,42 @@ iperf_json_printf(const char *format, ...)
     va_start(argp, format);
     np = name;
     for (cp = format; *cp != '\0'; ++cp) {
-	switch (*cp) {
-	    case ' ':
-	    break;
-	    case ':':
-	    *np = '\0';
-	    break;
-	    case '%':
-	    ++cp;
-	    switch (*cp) {
-		case 'b':
-		j = cJSON_CreateBool(va_arg(argp, int));
-		break;
-		case 'd':
-		j = cJSON_CreateInt(va_arg(argp, int64_t));
-		break;
-		case 'f':
-		j = cJSON_CreateFloat(va_arg(argp, double));
-		break;
-		case 's':
-		j = cJSON_CreateString(va_arg(argp, char *));
-		break;
-		default:
-		va_end(argp);
-		return NULL;
-	    }
-	    if (j == NULL) {
-	    	va_end(argp);
-	    	return NULL;
-	    }
-	    cJSON_AddItemToObject(o, name, j);
-	    np = name;
-	    break;
-	    default:
-	    *np++ = *cp;
-	    break;
-	}
+        switch (*cp) {
+            case ' ':
+            break;
+            case ':':
+            *np = '\0';
+            break;
+            case '%':
+            ++cp;
+            switch (*cp) {
+                case 'b':
+                j = cJSON_CreateBool(va_arg(argp, int));
+                break;
+                case 'd':
+                j = cJSON_CreateInt(va_arg(argp, int64_t));
+                break;
+                case 'f':
+                j = cJSON_CreateFloat(va_arg(argp, double));
+                break;
+                case 's':
+                j = cJSON_CreateString(va_arg(argp, char *));
+                break;
+                default:
+                va_end(argp);
+                return NULL;
+            }
+            if (j == NULL) {
+                    va_end(argp);
+                    return NULL;
+            }
+            cJSON_AddItemToObject(o, name, j);
+            np = name;
+            break;
+            default:
+            *np++ = *cp;
+            break;
+        }
     }
     va_end(argp);
     return o;
@@ -389,11 +389,11 @@ iperf_dump_fdset(FILE *fp, char *str, int nfds, fd_set *fds)
     comma = 0;
     for (fd = 0; fd < nfds; ++fd) {
         if (FD_ISSET(fd, fds)) {
-	    if (comma)
-		fprintf(fp, ", ");
-	    fprintf(fp, "%d", fd);
-	    comma = 1;
-	}
+            if (comma)
+                fprintf(fp, ", ");
+            fprintf(fp, "%d", fd);
+            comma = 1;
+        }
     }
     fprintf(fp, "]\n");
 }

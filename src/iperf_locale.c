@@ -132,7 +132,7 @@ const char usage_longstr[] = "Usage: iperf [-s|-c host] [options]\n"
                            "  -n, --bytes     #[KMG]    number of bytes to transmit (instead of -t)\n"
                            "  -k, --blockcount #[KMG]   number of blocks (packets) to transmit (instead of -t or -n)\n"
                            "  -l, --len       #[KMG]    length of buffer to read or write\n"
-			   "                            (default %d KB for TCP, %d KB for UDP)\n"
+                           "                            (default %d KB for TCP, %d KB for UDP)\n"
                            "  --cport         <port>    bind to a specific client port (TCP and UDP, default: ephemeral port)\n"
                            "  -P, --parallel  #         number of parallel client streams to run\n"
                            "  -R, --reverse             run in reverse mode (server sends, client receives)\n"
@@ -155,22 +155,22 @@ const char usage_longstr[] = "Usage: iperf [-s|-c host] [options]\n"
                            "  --udp-counters-64bit      use 64-bit counters in UDP test packets\n"
 #if defined(HAVE_SO_MAX_PACING_RATE)
                            "  --no-fq-socket-pacing     disable fair-queuing based socket pacing\n"
-			   "                            (Linux only)\n"
+                           "                            (Linux only)\n"
 #endif
 
 #ifdef NOT_YET_SUPPORTED /* still working on these */
 #endif
 
-			   "\n"
+                           "\n"
                            "[KMG] indicates options that support a K/M/G suffix for kilo-, mega-, or giga-\n"
-			   "\n"
+                           "\n"
 #ifdef PACKAGE_URL
                            "iperf3 homepage at: " PACKAGE_URL "\n"
 #endif /* PACKAGE_URL */
 #ifdef PACKAGE_BUGREPORT
                            "Report bugs to:     " PACKAGE_BUGREPORT "\n"
 #endif /* PACKAGE_BUGREPORT */
-			   ;
+                           ;
 
 #ifdef OBSOLETE /* from old iperf: no longer supported. Add some of these back someday */
   "-d, --dualtest           Do a bidirectional test simultaneously\n"

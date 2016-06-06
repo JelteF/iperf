@@ -180,12 +180,12 @@ iperf_sctp_listen(struct iperf_test *test)
         else if (test->settings->domain == AF_INET6)
             opt = 1;
         if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY,
-		       (char *) &opt, sizeof(opt)) < 0) {
-	    close(s);
-	    freeaddrinfo(res);
-	    i_errno = IEPROTOCOL;
-	    return -1;
-	}
+                       (char *) &opt, sizeof(opt)) < 0) {
+            close(s);
+            freeaddrinfo(res);
+            i_errno = IEPROTOCOL;
+            return -1;
+        }
     }
 #endif /* IPV6_V6ONLY */
 
@@ -254,17 +254,17 @@ iperf_sctp_connect(struct iperf_test *test)
     hints.ai_socktype = SOCK_STREAM;
     snprintf(portstr, sizeof(portstr), "%d", test->server_port);
     if (getaddrinfo(test->server_hostname, portstr, &hints, &server_res) != 0) {
-	if (test->bind_address)
-	    freeaddrinfo(local_res);
+        if (test->bind_address)
+            freeaddrinfo(local_res);
         i_errno = IESTREAMCONNECT;
         return -1;
     }
 
     s = socket(server_res->ai_family, SOCK_STREAM, IPPROTO_SCTP);
     if (s < 0) {
-	if (test->bind_address)
-	    freeaddrinfo(local_res);
-	freeaddrinfo(server_res);
+        if (test->bind_address)
+            freeaddrinfo(local_res);
+        freeaddrinfo(server_res);
         i_errno = IESTREAMCONNECT;
         return -1;
     }
@@ -281,24 +281,24 @@ iperf_sctp_connect(struct iperf_test *test)
 
     if ((test->settings->mss >= 512 && test->settings->mss <= 131072)) {
 
-	/*
-	 * Some platforms use a struct sctp_assoc_value as the
-	 * argument to SCTP_MAXSEG.  Other (older API implementations)
-	 * take an int.  FreeBSD 10 and CentOS 6 support SCTP_MAXSEG,
-	 * but OpenSolaris 11 doesn't.
-	 */
+        /*
+         * Some platforms use a struct sctp_assoc_value as the
+         * argument to SCTP_MAXSEG.  Other (older API implementations)
+         * take an int.  FreeBSD 10 and CentOS 6 support SCTP_MAXSEG,
+         * but OpenSolaris 11 doesn't.
+         */
 #ifdef HAVE_STRUCT_SCTP_ASSOC_VALUE
         struct sctp_assoc_value av;
 
-	/*
-	 * Some platforms support SCTP_FUTURE_ASSOC, others need to
-	 * (equivalently) do 0 here.  FreeBSD 10 is an example of the
-	 * former, CentOS 6 Linux is an example of the latter.
-	 */
+        /*
+         * Some platforms support SCTP_FUTURE_ASSOC, others need to
+         * (equivalently) do 0 here.  FreeBSD 10 is an example of the
+         * former, CentOS 6 Linux is an example of the latter.
+         */
 #ifdef SCTP_FUTURE_ASSOC
         av.assoc_id = SCTP_FUTURE_ASSOC;
 #else
-	av.assoc_id = 0;
+        av.assoc_id = 0;
 #endif
         av.assoc_value = test->settings->mss;
 
@@ -309,14 +309,14 @@ iperf_sctp_connect(struct iperf_test *test)
             return -1;
         }
 #else
-	opt = test->settings->mss;
+        opt = test->settings->mss;
 
-	/*
-	 * Solaris might not support this option.  If it doesn't work,
-	 * ignore the error (at least for now).
-	 */
+        /*
+         * Solaris might not support this option.  If it doesn't work,
+         * ignore the error (at least for now).
+         */
         if (setsockopt(s, IPPROTO_SCTP, SCTP_MAXSEG, &opt, sizeof(opt)) < 0 &&
-	    errno != ENOPROTOOPT) {
+            errno != ENOPROTOOPT) {
             close(s);
             freeaddrinfo(server_res);
             i_errno = IESETMSS;
@@ -347,8 +347,8 @@ iperf_sctp_connect(struct iperf_test *test)
 
     /* TODO support sctp_connectx() to avoid heartbeating. */
     if (connect(s, (struct sockaddr *) server_res->ai_addr, server_res->ai_addrlen) < 0 && errno != EINPROGRESS) {
-	close(s);
-	freeaddrinfo(server_res);
+        close(s);
+        freeaddrinfo(server_res);
         i_errno = IESTREAMCONNECT;
         return -1;
     }
@@ -356,7 +356,7 @@ iperf_sctp_connect(struct iperf_test *test)
 
     /* Send cookie for verification */
     if (Nwrite(s, test->cookie, COOKIE_SIZE, Psctp) < 0) {
-	close(s);
+        close(s);
         i_errno = IESENDCOOKIE;
         return -1;
     }
@@ -370,7 +370,7 @@ iperf_sctp_connect(struct iperf_test *test)
      */
     opt = 0;
     if (setsockopt(s, IPPROTO_SCTP, SCTP_DISABLE_FRAGMENTS, &opt, sizeof(opt)) < 0 &&
-	errno != ENOPROTOOPT) {
+        errno != ENOPROTOOPT) {
         close(s);
         freeaddrinfo(server_res);
         i_errno = IESETSCTPDISABLEFRAG;
@@ -520,7 +520,7 @@ iperf_sctp_bindx(struct iperf_test *test, int s, int is_server)
         for (ai = ai0; ai; ai = ai->ai_next) {
             if (domain != AF_UNSPEC && domain != ai->ai_family)
                 continue;
-	    memcpy(bp, ai->ai_addr, ai->ai_addrlen);
+            memcpy(bp, ai->ai_addr, ai->ai_addrlen);
             bp += ai->ai_addrlen;
         }
     }

@@ -74,88 +74,88 @@ struct iperf_stream;
 #define SERVER_ERROR (-2)
 
 /* Getter routines for some fields inside iperf_test. */
-int	iperf_get_verbose( struct iperf_test* ipt );
-int	iperf_get_control_socket( struct iperf_test* ipt );
-int	iperf_get_test_omit( struct iperf_test* ipt );
-int	iperf_get_test_duration( struct iperf_test* ipt );
-char	iperf_get_test_role( struct iperf_test* ipt );
-int	iperf_get_test_reverse( struct iperf_test* ipt );
-int	iperf_get_test_blksize( struct iperf_test* ipt );
-FILE*	iperf_get_test_outfile( struct iperf_test* ipt );
+int     iperf_get_verbose( struct iperf_test* ipt );
+int     iperf_get_control_socket( struct iperf_test* ipt );
+int     iperf_get_test_omit( struct iperf_test* ipt );
+int     iperf_get_test_duration( struct iperf_test* ipt );
+char    iperf_get_test_role( struct iperf_test* ipt );
+int     iperf_get_test_reverse( struct iperf_test* ipt );
+int     iperf_get_test_blksize( struct iperf_test* ipt );
+FILE*   iperf_get_test_outfile( struct iperf_test* ipt );
 uint64_t iperf_get_test_rate( struct iperf_test* ipt );
 int     iperf_get_test_burst( struct iperf_test* ipt );
-int	iperf_get_test_socket_bufsize( struct iperf_test* ipt );
-double	iperf_get_test_reporter_interval( struct iperf_test* ipt );
-double	iperf_get_test_stats_interval( struct iperf_test* ipt );
-int	iperf_get_test_num_streams( struct iperf_test* ipt );
-int	iperf_get_test_server_port( struct iperf_test* ipt );
-char*	iperf_get_test_server_hostname( struct iperf_test* ipt );
-char*	iperf_get_test_template( struct iperf_test* ipt );
-int	iperf_get_test_protocol_id( struct iperf_test* ipt );
-int	iperf_get_test_json_output( struct iperf_test* ipt );
-char*	iperf_get_test_json_output_string ( struct iperf_test* ipt );
-int	iperf_get_test_zerocopy( struct iperf_test* ipt );
-int	iperf_get_test_get_server_output( struct iperf_test* ipt );
-char*	iperf_get_test_bind_address ( struct iperf_test* ipt );
-int	iperf_get_test_udp_counters_64bit( struct iperf_test* ipt );
-int	iperf_get_test_one_off( struct iperf_test* ipt );
+int     iperf_get_test_socket_bufsize( struct iperf_test* ipt );
+double  iperf_get_test_reporter_interval( struct iperf_test* ipt );
+double  iperf_get_test_stats_interval( struct iperf_test* ipt );
+int     iperf_get_test_num_streams( struct iperf_test* ipt );
+int     iperf_get_test_server_port( struct iperf_test* ipt );
+char*   iperf_get_test_server_hostname( struct iperf_test* ipt );
+char*   iperf_get_test_template( struct iperf_test* ipt );
+int     iperf_get_test_protocol_id( struct iperf_test* ipt );
+int     iperf_get_test_json_output( struct iperf_test* ipt );
+char*   iperf_get_test_json_output_string ( struct iperf_test* ipt );
+int     iperf_get_test_zerocopy( struct iperf_test* ipt );
+int     iperf_get_test_get_server_output( struct iperf_test* ipt );
+char*   iperf_get_test_bind_address ( struct iperf_test* ipt );
+int     iperf_get_test_udp_counters_64bit( struct iperf_test* ipt );
+int     iperf_get_test_one_off( struct iperf_test* ipt );
 
 /* Setter routines for some fields inside iperf_test. */
-void	iperf_set_verbose( struct iperf_test* ipt, int verbose );
-void	iperf_set_control_socket( struct iperf_test* ipt, int ctrl_sck );
-void	iperf_set_test_omit( struct iperf_test* ipt, int omit );
-void	iperf_set_test_duration( struct iperf_test* ipt, int duration );
-void	iperf_set_test_reporter_interval( struct iperf_test* ipt, double reporter_interval );
-void	iperf_set_test_stats_interval( struct iperf_test* ipt, double stats_interval );
-void	iperf_set_test_state( struct iperf_test* ipt, signed char state );
-void	iperf_set_test_blksize( struct iperf_test* ipt, int blksize );
-void	iperf_set_test_rate( struct iperf_test* ipt, uint64_t rate );
-void	iperf_set_test_burst( struct iperf_test* ipt, int burst );
-void	iperf_set_test_server_port( struct iperf_test* ipt, int server_port );
-void	iperf_set_test_socket_bufsize( struct iperf_test* ipt, int socket_bufsize );
-void	iperf_set_test_num_streams( struct iperf_test* ipt, int num_streams );
-void	iperf_set_test_role( struct iperf_test* ipt, char role );
-void	iperf_set_test_server_hostname( struct iperf_test* ipt, char* server_hostname );
+void    iperf_set_verbose( struct iperf_test* ipt, int verbose );
+void    iperf_set_control_socket( struct iperf_test* ipt, int ctrl_sck );
+void    iperf_set_test_omit( struct iperf_test* ipt, int omit );
+void    iperf_set_test_duration( struct iperf_test* ipt, int duration );
+void    iperf_set_test_reporter_interval( struct iperf_test* ipt, double reporter_interval );
+void    iperf_set_test_stats_interval( struct iperf_test* ipt, double stats_interval );
+void    iperf_set_test_state( struct iperf_test* ipt, signed char state );
+void    iperf_set_test_blksize( struct iperf_test* ipt, int blksize );
+void    iperf_set_test_rate( struct iperf_test* ipt, uint64_t rate );
+void    iperf_set_test_burst( struct iperf_test* ipt, int burst );
+void    iperf_set_test_server_port( struct iperf_test* ipt, int server_port );
+void    iperf_set_test_socket_bufsize( struct iperf_test* ipt, int socket_bufsize );
+void    iperf_set_test_num_streams( struct iperf_test* ipt, int num_streams );
+void    iperf_set_test_role( struct iperf_test* ipt, char role );
+void    iperf_set_test_server_hostname( struct iperf_test* ipt, char* server_hostname );
 void    iperf_set_test_template( struct iperf_test *ipt, char *tmp_template );
-void	iperf_set_test_reverse( struct iperf_test* ipt, int reverse );
-void	iperf_set_test_json_output( struct iperf_test* ipt, int json_output );
-int	iperf_has_zerocopy( void );
-void	iperf_set_test_zerocopy( struct iperf_test* ipt, int zerocopy );
-void	iperf_set_test_get_server_output( struct iperf_test* ipt, int get_server_output );
-void	iperf_set_test_bind_address( struct iperf_test* ipt, char *bind_address );
-void	iperf_set_test_udp_counters_64bit( struct iperf_test* ipt, int udp_counters_64bit );
-void	iperf_set_test_one_off( struct iperf_test* ipt, int one_off );
+void    iperf_set_test_reverse( struct iperf_test* ipt, int reverse );
+void    iperf_set_test_json_output( struct iperf_test* ipt, int json_output );
+int     iperf_has_zerocopy( void );
+void    iperf_set_test_zerocopy( struct iperf_test* ipt, int zerocopy );
+void    iperf_set_test_get_server_output( struct iperf_test* ipt, int get_server_output );
+void    iperf_set_test_bind_address( struct iperf_test* ipt, char *bind_address );
+void    iperf_set_test_udp_counters_64bit( struct iperf_test* ipt, int udp_counters_64bit );
+void    iperf_set_test_one_off( struct iperf_test* ipt, int one_off );
 
 /**
  * exchange_parameters - handles the param_Exchange part for client
  *
  */
-int      iperf_exchange_parameters(struct iperf_test * test);
+int iperf_exchange_parameters(struct iperf_test * test);
 
 /**
  * add_to_interval_list -- adds new interval to the interval_list
  *
  */
-void      add_to_interval_list(struct iperf_stream_result * rp, struct iperf_interval_results *temp);
+void add_to_interval_list(struct iperf_stream_result * rp, struct iperf_interval_results *temp);
 
 /**
  * connect_msg -- displays connection message
  * denoting senfer/receiver details
  *
  */
-void      connect_msg(struct iperf_stream * sp);
+void connect_msg(struct iperf_stream * sp);
 
 /**
  * iperf_stats_callback -- handles the statistic gathering
  *
  */
-void     iperf_stats_callback(struct iperf_test * test);
+void iperf_stats_callback(struct iperf_test * test);
 
 /**
  * iperf_reporter_callback -- handles the report printing
  *
  */
-void     iperf_reporter_callback(struct iperf_test * test);
+void iperf_reporter_callback(struct iperf_test * test);
 
 /**
  * iperf_new_test -- return a new iperf_test with default values
@@ -165,14 +165,14 @@ void     iperf_reporter_callback(struct iperf_test * test);
  */
 struct iperf_test *iperf_new_test();
 
-int      iperf_defaults(struct iperf_test * testp);
+int iperf_defaults(struct iperf_test * testp);
 
 /**
  * iperf_free_test -- free resources used by test, calls iperf_free_stream to
  * free streams
  *
  */
-void      iperf_free_test(struct iperf_test * testp);
+void iperf_free_test(struct iperf_test * testp);
 
 /**
  * iperf_new_stream -- return a net iperf_stream with default values
@@ -186,19 +186,19 @@ struct iperf_stream *iperf_new_stream(struct iperf_test *, int);
  * iperf_add_stream -- add a stream to a test
  *
  */
-void      iperf_add_stream(struct iperf_test * test, struct iperf_stream * stream);
+void iperf_add_stream(struct iperf_test * test, struct iperf_stream * stream);
 
 /**
  * iperf_init_stream -- init resources associated with test
  *
  */
-int       iperf_init_stream(struct iperf_stream *, struct iperf_test *);
+int iperf_init_stream(struct iperf_stream *, struct iperf_test *);
 
 /**
  * iperf_free_stream -- free resources associated with test
  *
  */
-void      iperf_free_stream(struct iperf_stream * sp);
+void iperf_free_stream(struct iperf_stream * sp);
 
 int has_tcpinfo(void);
 int has_tcpinfo_retransmits(void);
@@ -287,11 +287,11 @@ enum {
     IEFILE = 14,            // -F file couldn't be opened
     IEBURST = 15,           // Invalid burst count. Maximum value = %dMAX_BURST
     IEENDCONDITIONS = 16,   // Only one test end condition (-t, -n, -k) may be specified
-    IELOGFILE = 17,	    // Can't open log file
-    IENOSCTP = 18,	    // No SCTP support available
-    IEBIND = 19,			// Local port specified with no local bind option
+    IELOGFILE = 17,         // Can't open log file
+    IENOSCTP = 18,          // No SCTP support available
+    IEBIND = 19,            // Local port specified with no local bind option
     IEUDPBLOCKSIZE = 20,    // Block size too large. Maximum value = %dMAX_UDP_BLOCKSIZE
-    IEBADTOS = 21,	    // Bad TOS value
+    IEBADTOS = 21,          // Bad TOS value
     /* Test errors */
     IENEWTEST = 100,        // Unable to create a new test (check perror)
     IEINITTEST = 101,       // Test initialization failed (check perror)
@@ -326,10 +326,10 @@ enum {
     IESETWINDOWSIZE = 130,  // Unable to set socket window size (check perror)
     IEPROTOCOL = 131,       // Protocol does not exist
     IEAFFINITY = 132,       // Unable to set CPU affinity (check perror)
-    IEDAEMON = 133,	    // Unable to become a daemon process
+    IEDAEMON = 133,         // Unable to become a daemon process
     IESETCONGESTION = 134,  // Unable to set TCP_CONGESTION
-    IEPIDFILE = 135,	    // Unable to write PID file
-    IEV6ONLY = 136,  	    // Unable to set/unset IPV6_V6ONLY (check perror)
+    IEPIDFILE = 135,        // Unable to write PID file
+    IEV6ONLY = 136,         // Unable to set/unset IPV6_V6ONLY (check perror)
     IESETSCTPDISABLEFRAG = 137, // Unable to set SCTP Fragmentation (check perror)
     IESETSCTPNSTREAM= 138,  //  Unable to set SCTP number of streams (check perror)
     IESETSCTPBINDX= 139,    // Unable to process sctp_bindx() parameters
