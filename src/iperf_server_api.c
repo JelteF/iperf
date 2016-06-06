@@ -36,6 +36,7 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <sys/socket.h>
+#include <sys/epoll.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -117,10 +118,27 @@ iperf_server_listen(struct iperf_test *test)
     if (!test->json_output)
         iprintf(test, "-----------------------------------------------------------\n");
 
+
     FD_ZERO(&test->read_set);
     FD_ZERO(&test->write_set);
     FD_SET(test->listener, &test->read_set);
     if (test->listener > test->max_fd) test->max_fd = test->listener;
+
+    test->epoll_fd = epoll_create(MAX_EPOLL_EVENTS);
+    if(test->epoll_fd < 0) {
+        printf("create epoll socket failed \n");
+        return -1;
+    }
+
+    struct epoll_event ev;
+    ev.events=EPOLLIN;
+    ev.data.fd = test->listener;
+
+    if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, test->listener, &ev)==-1) {
+        perror("epoll_ctl: listener register failed");
+        return -1;
+    }
+
 
     return 0;
 }
@@ -437,6 +455,8 @@ iperf_run_server(struct iperf_test *test)
     struct iperf_stream *sp;
     struct timeval now;
     struct timeval* timeout;
+    struct epoll_event events[MAX_EPOLL_EVENTS];
+
 
     if (test->affinity != -1)
         if (iperf_setaffinity(test, test->affinity) != 0)
@@ -474,7 +494,8 @@ iperf_run_server(struct iperf_test *test)
 
         (void) gettimeofday(&now, NULL);
         timeout = tmr_timeout(&now);
-        result = select(test->max_fd + 1, &read_set, &write_set, NULL, timeout);
+        result = epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, -1);
+        printf("Amount of epoll waiting %d\n", result);
         if (result < 0 && errno != EINTR) {
             cleanup_server(test);
             i_errno = IESELECT;

@@ -249,6 +249,9 @@ struct iperf_test
     fd_set    read_set;                         /* set of read sockets */
     fd_set    write_set;                        /* set of write sockets */
 
+    /* Epoll related parameters */
+    int       epoll_fd;
+
     /* Interval related members */
     int       omitting;
     double    stats_interval;
@@ -320,5 +323,9 @@ struct iperf_test
 #define MAX_BURST 1000
 #define MAX_MSS (9 * 1024)
 #define MAX_STREAMS 128
+
+/* epoll globals */
+#define MAX_EPOLL_EVENTS 10
+
 
 #endif /* !__IPERF_H */
