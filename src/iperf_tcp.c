@@ -37,7 +37,6 @@
 #include <netdb.h>
 #include <netinet/tcp.h>
 #include <sys/time.h>
-#include <sys/select.h>
 
 #include "iperf.h"
 #include "iperf_api.h"

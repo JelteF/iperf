@@ -32,7 +32,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <sys/select.h>
 #include <sys/uio.h>
 #include <arpa/inet.h>
 

@@ -37,7 +37,6 @@
 #include <netdb.h>
 #include <netinet/tcp.h>
 #include <sys/time.h>
-#include <sys/select.h>
 
 #ifdef HAVE_NETINET_SCTP_H
 #include <netinet/sctp.h>
