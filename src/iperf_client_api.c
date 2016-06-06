@@ -127,7 +127,7 @@ create_client_timers(struct iperf_test * test)
             i_errno = IEINITTEST;
             return -1;
 	}
-    } 
+    }
     if (test->stats_interval != 0) {
         test->stats_timer = tmr_create(&now, client_stats_timer_proc, cd, test->stats_interval * SEC_TO_US, 1);
         if (test->stats_timer == NULL) {

@@ -75,7 +75,7 @@ iperf_sctp_recv(struct iperf_stream *sp)
 }
 
 
-/* iperf_sctp_send 
+/* iperf_sctp_send
  *
  * sends the data for SCTP
  */
@@ -87,7 +87,7 @@ iperf_sctp_send(struct iperf_stream *sp)
 
     r = Nwrite(sp->socket, sp->buffer, sp->settings->blksize, Psctp);
     if (r < 0)
-        return r;    
+        return r;
 
     sp->result->bytes_sent += r;
     sp->result->bytes_sent_this_interval += r;
@@ -156,7 +156,7 @@ iperf_sctp_listen(struct iperf_test *test)
     int s, opt;
 
     close(test->listener);
-   
+
     snprintf(portstr, 6, "%d", test->server_port);
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = (test->settings->domain == AF_UNSPEC ? AF_INET6 : test->settings->domain);
@@ -179,7 +179,7 @@ iperf_sctp_listen(struct iperf_test *test)
             opt = 0;
         else if (test->settings->domain == AF_INET6)
             opt = 1;
-        if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, 
+        if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY,
 		       (char *) &opt, sizeof(opt)) < 0) {
 	    close(s);
 	    freeaddrinfo(res);
@@ -218,7 +218,7 @@ iperf_sctp_listen(struct iperf_test *test)
     }
 
     test->listener = s;
-  
+
     return s;
 #else
     i_errno = IENOSCTP;

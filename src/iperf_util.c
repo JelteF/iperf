@@ -80,7 +80,7 @@ make_cookie(char *cookie)
 /* is_closed
  *
  * Test if the file descriptor fd is closed.
- * 
+ *
  * Iperf uses this function to test whether a TCP stream socket
  * is closed, because accepting and denying an invalid connection
  * in iperf_tcp_accept is not considered an error.
@@ -128,7 +128,7 @@ double
 timeval_diff(struct timeval * tv0, struct timeval * tv1)
 {
     double time1, time2;
-    
+
     time1 = tv0->tv_sec + (tv0->tv_usec / 1000000.0);
     time2 = tv1->tv_sec + (tv1->tv_usec / 1000000.0);
 
@@ -220,7 +220,7 @@ get_system_info(void)
     memset(buf, 0, 1024);
     uname(&uts);
 
-    snprintf(buf, sizeof(buf), "%s %s %s %s %s", uts.sysname, uts.nodename, 
+    snprintf(buf, sizeof(buf), "%s %s %s %s %s", uts.sysname, uts.nodename,
 	     uts.release, uts.version, uts.machine);
 
     return buf;
@@ -237,44 +237,44 @@ get_optional_features(void)
 
 #if defined(HAVE_CPU_AFFINITY)
     if (numfeatures > 0) {
-	strncat(features, ", ", 
+	strncat(features, ", ",
 		sizeof(features) - strlen(features) - 1);
     }
-    strncat(features, "CPU affinity setting", 
+    strncat(features, "CPU affinity setting",
 	sizeof(features) - strlen(features) - 1);
     numfeatures++;
 #endif /* HAVE_CPU_AFFINITY */
-    
+
 #if defined(HAVE_FLOWLABEL)
     if (numfeatures > 0) {
-	strncat(features, ", ", 
+	strncat(features, ", ",
 		sizeof(features) - strlen(features) - 1);
     }
-    strncat(features, "IPv6 flow label", 
+    strncat(features, "IPv6 flow label",
 	sizeof(features) - strlen(features) - 1);
     numfeatures++;
 #endif /* HAVE_FLOWLABEL */
-    
+
 #if defined(HAVE_SCTP)
     if (numfeatures > 0) {
-	strncat(features, ", ", 
+	strncat(features, ", ",
 		sizeof(features) - strlen(features) - 1);
     }
-    strncat(features, "SCTP", 
+    strncat(features, "SCTP",
 	sizeof(features) - strlen(features) - 1);
     numfeatures++;
 #endif /* HAVE_SCTP */
-    
+
 #if defined(HAVE_TCP_CONGESTION)
     if (numfeatures > 0) {
-	strncat(features, ", ", 
+	strncat(features, ", ",
 		sizeof(features) - strlen(features) - 1);
     }
-    strncat(features, "TCP congestion algorithm setting", 
+    strncat(features, "TCP congestion algorithm setting",
 	sizeof(features) - strlen(features) - 1);
     numfeatures++;
 #endif /* HAVE_TCP_CONGESTION */
-    
+
 #if defined(HAVE_SENDFILE)
     if (numfeatures > 0) {
 	strncat(features, ", ",
@@ -296,7 +296,7 @@ get_optional_features(void)
 #endif /* HAVE_SO_MAX_PACING_RATE */
 
     if (numfeatures == 0) {
-	strncat(features, "None", 
+	strncat(features, "None",
 		sizeof(features) - strlen(features) - 1);
     }
 

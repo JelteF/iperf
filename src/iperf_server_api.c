@@ -106,10 +106,10 @@ iperf_server_listen(struct iperf_test *test)
     if (test->protocol->id == Ptcp) {
         if (test->settings->socket_bufsize > 0) {
             unit_snprintf(ubuf, UNIT_LEN, (double) x, 'A');
-	    if (!test->json_output) 
+	    if (!test->json_output)
 		iprintf(test, report_window, ubuf);
         } else {
-	    if (!test->json_output) 
+	    if (!test->json_output)
 		iprintf(test, "%s", report_autotune);
         }
     }
@@ -153,14 +153,14 @@ iperf_accept(struct iperf_test *test)
             return -1;
         if (iperf_exchange_parameters(test) < 0)
             return -1;
-	if (test->server_affinity != -1) 
+	if (test->server_affinity != -1)
 	    if (iperf_setaffinity(test, test->server_affinity) != 0)
 		return -1;
         if (test->on_connect)
             test->on_connect(test);
     } else {
 	/*
-	 * Don't try to read from the socket.  It could block an ongoing test. 
+	 * Don't try to read from the socket.  It could block an ongoing test.
 	 * Just send ACCESS_DENIED.
 	 */
         if (Nwrite(s, (char*) &rbuf, sizeof(rbuf), Ptcp) < 0) {
@@ -302,13 +302,13 @@ iperf_test_reset(struct iperf_test *test)
     FD_ZERO(&test->write_set);
     FD_SET(test->listener, &test->read_set);
     test->max_fd = test->listener;
-    
+
     test->num_streams = 1;
     test->settings->socket_bufsize = 0;
     test->settings->blksize = DEFAULT_TCP_BLKSIZE;
     test->settings->rate = 0;
     test->settings->mss = 0;
-    memset(test->cookie, 0, COOKIE_SIZE); 
+    memset(test->cookie, 0, COOKIE_SIZE);
 }
 
 static void
@@ -364,7 +364,7 @@ create_server_timers(struct iperf_test * test)
 
 static void
 server_omit_timer_proc(TimerClientData client_data, struct timeval *nowP)
-{   
+{
     struct iperf_test *test = client_data.p;
 
     test->omit_timer = NULL;
@@ -384,7 +384,7 @@ static int
 create_server_omit_timer(struct iperf_test * test)
 {
     struct timeval now;
-    TimerClientData cd; 
+    TimerClientData cd;
 
     if (test->omit == 0) {
 	test->omit_timer = NULL;
@@ -392,11 +392,11 @@ create_server_omit_timer(struct iperf_test * test)
     } else {
 	if (gettimeofday(&now, NULL) < 0) {
 	    i_errno = IEINITTEST;
-	    return -1; 
+	    return -1;
 	}
 	test->omitting = 1;
 	cd.p = test;
-	test->omit_timer = tmr_create(&now, server_omit_timer_proc, cd, test->omit * SEC_TO_US, 0); 
+	test->omit_timer = tmr_create(&now, server_omit_timer_proc, cd, test->omit * SEC_TO_US, 0);
 	if (test->omit_timer == NULL) {
 	    i_errno = IEINITTEST;
 	    return -1;
@@ -438,7 +438,7 @@ iperf_run_server(struct iperf_test *test)
     struct timeval now;
     struct timeval* timeout;
 
-    if (test->affinity != -1) 
+    if (test->affinity != -1)
 	if (iperf_setaffinity(test, test->affinity) != 0)
 	    return -1;
 
@@ -495,12 +495,12 @@ iperf_run_server(struct iperf_test *test)
 		    cleanup_server(test);
                     return -1;
 		}
-                FD_CLR(test->ctrl_sck, &read_set);                
+                FD_CLR(test->ctrl_sck, &read_set);
             }
 
             if (test->state == CREATE_STREAMS) {
                 if (FD_ISSET(test->prot_listener, &read_set)) {
-    
+
                     if ((s = test->protocol->accept(test)) < 0) {
 			cleanup_server(test);
                         return -1;
@@ -519,7 +519,7 @@ iperf_run_server(struct iperf_test *test)
 			    FD_SET(s, &test->read_set);
 			if (s > test->max_fd) test->max_fd = s;
 
-			/* 
+			/*
 			 * If the protocol isn't UDP, or even if it is but
 			 * we're the receiver, set nonblocking sockets.
 			 * We need this to allow a server receiver to
@@ -541,7 +541,7 @@ iperf_run_server(struct iperf_test *test)
                     if (test->protocol->id != Ptcp) {
                         FD_CLR(test->prot_listener, &test->read_set);
                         close(test->prot_listener);
-                    } else { 
+                    } else {
                         if (test->no_delay || test->settings->mss || test->settings->socket_bufsize) {
                             FD_CLR(test->listener, &test->read_set);
                             close(test->listener);
@@ -614,11 +614,11 @@ iperf_run_server(struct iperf_test *test)
     if (test->json_output) {
 	if (iperf_json_finish(test) < 0)
 	    return -1;
-    } 
+    }
 
     iflush(test);
 
-    if (test->server_affinity != -1) 
+    if (test->server_affinity != -1)
 	if (iperf_clearaffinity(test) != 0)
 	    return -1;
 
