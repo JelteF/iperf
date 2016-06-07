@@ -167,6 +167,16 @@ iperf_accept(struct iperf_test *test)
         FD_SET(test->ctrl_sck, &test->read_set);
         if (test->ctrl_sck > test->max_fd) test->max_fd = test->ctrl_sck;
 
+        struct epoll_event ev;
+        ev.events=EPOLLIN;
+        ev.data.fd = test->ctrl_sck;
+
+        if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, test->ctrl_sck, &ev)==-1) {
+            perror("epoll_ctl: ctrl_sck register failed");
+            return -1;
+        }
+
+
         if (iperf_set_send_state(test, PARAM_EXCHANGE) != 0)
             return -1;
         if (iperf_exchange_parameters(test) < 0)
@@ -176,6 +186,8 @@ iperf_accept(struct iperf_test *test)
                 return -1;
         if (test->on_connect)
             test->on_connect(test);
+
+        // setnonblocking(test->ctrl_sck, 1);
     } else {
         /*
          * Don't try to read from the socket.  It could block an ongoing test.
@@ -187,6 +199,7 @@ iperf_accept(struct iperf_test *test)
         }
         close(s);
     }
+
 
     return 0;
 }
@@ -446,11 +459,10 @@ cleanup_server(struct iperf_test *test)
     }
 }
 
-
 int
 iperf_run_server(struct iperf_test *test)
 {
-    int result, s, streams_accepted;
+    int number_of_events, s, streams_accepted;
     fd_set read_set, write_set;
     struct iperf_stream *sp;
     struct timeval now;
@@ -494,15 +506,14 @@ iperf_run_server(struct iperf_test *test)
 
         (void) gettimeofday(&now, NULL);
         timeout = tmr_timeout(&now);
-        result = epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, -1);
-        printf("Amount of epoll waiting %d\n", result);
-        if (result < 0 && errno != EINTR) {
+        number_of_events = epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, -1);
+        if (number_of_events < 0 && errno != EINTR) {
             cleanup_server(test);
             i_errno = IESELECT;
             return -1;
         }
-        if (result > 0) {
-            if (FD_ISSET(test->listener, &read_set)) {
+        for (int i = 0; i < number_of_events; i++) {
+            if (events[i].data.fd == test->listener) {
                 if (test->state != CREATE_STREAMS) {
                     if (iperf_accept(test) < 0) {
                         cleanup_server(test);
@@ -511,7 +522,8 @@ iperf_run_server(struct iperf_test *test)
                     FD_CLR(test->listener, &read_set);
                 }
             }
-            if (FD_ISSET(test->ctrl_sck, &read_set)) {
+
+            if (events[i].data.fd == test->ctrl_sck) {
                 if (iperf_handle_message_server(test) < 0) {
                     cleanup_server(test);
                     return -1;
@@ -520,7 +532,8 @@ iperf_run_server(struct iperf_test *test)
             }
 
             if (test->state == CREATE_STREAMS) {
-                if (FD_ISSET(test->prot_listener, &read_set)) {
+
+                if (events[i].data.fd == test->prot_listener) {
 
                     if ((s = test->protocol->accept(test)) < 0) {
                         cleanup_server(test);
@@ -534,10 +547,34 @@ iperf_run_server(struct iperf_test *test)
                             return -1;
                         }
 
-                        if (test->sender)
+                        if (test->sender) {
                             FD_SET(s, &test->write_set);
-                        else
+
+                            struct epoll_event ev;
+                            ev.events=EPOLLOUT;
+                            ev.data.fd = s;
+
+                            if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1) {
+                                perror("epoll_ctl: stream_socket register failed");
+                                return -1;
+                            }
+                        }
+
+                        else {
                             FD_SET(s, &test->read_set);
+
+                            struct epoll_event ev;
+                            ev.events=EPOLLIN;
+                            ev.data.fd = s;
+
+                            if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1) {
+                                perror("epoll_ctl: stream_socket register failed");
+                                return -1;
+                            }
+
+
+                        }
+
                         if (s > test->max_fd) test->max_fd = s;
 
                         /*
@@ -574,6 +611,16 @@ iperf_run_server(struct iperf_test *test)
                             test->listener = s;
                             FD_SET(test->listener, &test->read_set);
                             if (test->listener > test->max_fd) test->max_fd = test->listener;
+
+                            struct epoll_event ev;
+                            ev.events=EPOLLIN;
+                            ev.data.fd = test->listener;
+
+                            if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, test->listener, &ev)==-1) {
+                                perror("epoll_ctl: stream_socket register failed");
+                                return -1;
+                            }
+
                         }
                     }
                     test->prot_listener = -1;
@@ -622,7 +669,7 @@ iperf_run_server(struct iperf_test *test)
             }
         }
 
-        if (result == 0 ||
+        if (number_of_events == 0 ||
             (timeout != NULL && timeout->tv_sec == 0 && timeout->tv_usec == 0)) {
             /* Run the timers. */
             (void) gettimeofday(&now, NULL);
