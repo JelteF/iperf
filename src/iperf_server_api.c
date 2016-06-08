@@ -538,9 +538,14 @@ iperf_run_server(struct iperf_test *test)
                             ev.events=EPOLLIN;
                         }
 
-                        if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1) {
-                            perror("epoll_ctl: stream_socket register failed");
-                            return -1;
+                        // Modify this socket or add if it it doesn't exist
+                        // For UDP it needs to be modified and for TCP it needs
+                        // to be added.
+                        if(epoll_ctl(test->epoll_fd, EPOLL_CTL_MOD, s, &ev)==-1) {
+                            if (errno != ENOENT || epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1) {
+                                perror("epoll_ctl: stream_socket register failed");
+                                return -1;
+                            }
                         }
 
                         /*

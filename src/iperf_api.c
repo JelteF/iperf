@@ -1250,9 +1250,18 @@ iperf_exchange_parameters(struct iperf_test *test)
             }
             return -1;
         }
-        FD_SET(s, &test->read_set);
-        test->max_fd = (s > test->max_fd) ? s : test->max_fd;
         test->prot_listener = s;
+
+        struct epoll_event ev;
+        ev.events=EPOLLIN;
+        ev.data.fd = s;
+
+        // Add this socket to epoll, if it isn't already added
+        if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1 && errno != EEXIST) {
+            perror("epoll_ctl: exchange_parameters register failed");
+            return -1;
+        }
+
 
         // Send the control message to create streams and start the test
         if (iperf_set_send_state(test, CREATE_STREAMS) != 0)
