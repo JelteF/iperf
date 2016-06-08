@@ -1091,10 +1091,9 @@ iperf_send(struct iperf_test *test, fd_set *write_setP, struct epoll_event *ev)
             gettimeofday(&now, NULL);
         streams_active = 0;
         SLIST_FOREACH(sp, &test->streams, streams) {
-            if (! test->no_fq_socket_pacing ||
-                (sp->green_light &&
+            if (sp->green_light &&
                  (write_setP == NULL || FD_ISSET(sp->socket, write_setP) ||
-                  (ev && ev->data.fd == sp->socket)))) {
+                  (ev && ev->data.fd == sp->socket))) {
                 if ((r = sp->snd(sp)) < 0) {
                     if (r == NET_SOFTERROR)
                         break;
