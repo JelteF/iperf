@@ -119,10 +119,6 @@ iperf_server_listen(struct iperf_test *test)
         iprintf(test, "-----------------------------------------------------------\n");
 
 
-    FD_ZERO(&test->read_set);
-    FD_ZERO(&test->write_set);
-    FD_SET(test->listener, &test->read_set);
-    if (test->listener > test->max_fd) test->max_fd = test->listener;
 
     test->epoll_fd = epoll_create(MAX_EPOLL_EVENTS);
     if(test->epoll_fd < 0) {
@@ -164,8 +160,6 @@ iperf_accept(struct iperf_test *test)
             i_errno = IERECVCOOKIE;
             return -1;
         }
-        FD_SET(test->ctrl_sck, &test->read_set);
-        if (test->ctrl_sck > test->max_fd) test->max_fd = test->ctrl_sck;
 
         struct epoll_event ev;
         ev.events=EPOLLIN;
@@ -175,7 +169,6 @@ iperf_accept(struct iperf_test *test)
             perror("epoll_ctl: ctrl_sck register failed");
             return -1;
         }
-
 
         if (iperf_set_send_state(test, PARAM_EXCHANGE) != 0)
             return -1;
@@ -233,8 +226,6 @@ iperf_handle_message_server(struct iperf_test *test)
             cpu_util(test->cpu_util);
             test->stats_callback(test);
             SLIST_FOREACH(sp, &test->streams, streams) {
-                FD_CLR(sp->socket, &test->read_set);
-                FD_CLR(sp->socket, &test->write_set);
                 close(sp->socket);
             }
             test->reporter_callback(test);
@@ -263,8 +254,6 @@ iperf_handle_message_server(struct iperf_test *test)
             // XXX: Remove this line below!
             iperf_err(test, "the client has terminated");
             SLIST_FOREACH(sp, &test->streams, streams) {
-                FD_CLR(sp->socket, &test->read_set);
-                FD_CLR(sp->socket, &test->write_set);
                 close(sp->socket);
             }
             test->state = IPERF_DONE;
@@ -328,11 +317,6 @@ iperf_test_reset(struct iperf_test *test)
     test->sender = 0;
     test->sender_has_retransmits = 0;
     test->no_delay = 0;
-
-    FD_ZERO(&test->read_set);
-    FD_ZERO(&test->write_set);
-    FD_SET(test->listener, &test->read_set);
-    test->max_fd = test->listener;
 
     test->num_streams = 1;
     test->settings->socket_bufsize = 0;
@@ -519,7 +503,6 @@ iperf_run_server(struct iperf_test *test)
                         cleanup_server(test);
                         return -1;
                     }
-                    FD_CLR(test->listener, &read_set);
                 }
             }
 
@@ -528,7 +511,6 @@ iperf_run_server(struct iperf_test *test)
                     cleanup_server(test);
                     return -1;
                 }
-                FD_CLR(test->ctrl_sck, &read_set);
             }
 
             if (test->state == CREATE_STREAMS) {
@@ -548,8 +530,6 @@ iperf_run_server(struct iperf_test *test)
                         }
 
                         if (test->sender) {
-                            FD_SET(s, &test->write_set);
-
                             struct epoll_event ev;
                             ev.events=EPOLLOUT;
                             ev.data.fd = s;
@@ -561,8 +541,6 @@ iperf_run_server(struct iperf_test *test)
                         }
 
                         else {
-                            FD_SET(s, &test->read_set);
-
                             struct epoll_event ev;
                             ev.events=EPOLLIN;
                             ev.data.fd = s;
@@ -571,11 +549,7 @@ iperf_run_server(struct iperf_test *test)
                                 perror("epoll_ctl: stream_socket register failed");
                                 return -1;
                             }
-
-
                         }
-
-                        if (s > test->max_fd) test->max_fd = s;
 
                         /*
                          * If the protocol isn't UDP, or even if it is but
@@ -592,16 +566,13 @@ iperf_run_server(struct iperf_test *test)
                         if (test->on_new_stream)
                             test->on_new_stream(sp);
                     }
-                    FD_CLR(test->prot_listener, &read_set);
                 }
 
                 if (streams_accepted == test->num_streams) {
                     if (test->protocol->id != Ptcp) {
-                        FD_CLR(test->prot_listener, &test->read_set);
                         close(test->prot_listener);
                     } else {
                         if (test->no_delay || test->settings->mss || test->settings->socket_bufsize) {
-                            FD_CLR(test->listener, &test->read_set);
                             close(test->listener);
                             if ((s = netannounce(test->settings->domain, Ptcp, test->bind_address, test->server_port)) < 0) {
                                 cleanup_server(test);
@@ -609,8 +580,6 @@ iperf_run_server(struct iperf_test *test)
                                 return -1;
                             }
                             test->listener = s;
-                            FD_SET(test->listener, &test->read_set);
-                            if (test->listener > test->max_fd) test->max_fd = test->listener;
 
                             struct epoll_event ev;
                             ev.events=EPOLLIN;
@@ -655,13 +624,13 @@ iperf_run_server(struct iperf_test *test)
             if (test->state == TEST_RUNNING) {
                 if (test->reverse) {
                     // Reverse mode. Server sends.
-                    if (iperf_send(test, &write_set) < 0) {
+                    if (iperf_send(test, &write_set, &events[i]) < 0) {
                         cleanup_server(test);
                         return -1;
                     }
                 } else {
                     // Regular mode. Server receives.
-                    if (iperf_recv(test, &read_set) < 0) {
+                    if (iperf_recv(test, &read_set, &events[i]) < 0) {
                         cleanup_server(test);
                         return -1;
                     }

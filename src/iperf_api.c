@@ -39,6 +39,7 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <sys/socket.h>
+#include <sys/epoll.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -1071,7 +1072,7 @@ iperf_check_throttle(struct iperf_stream *sp, struct timeval *nowP)
 }
 
 int
-iperf_send(struct iperf_test *test, fd_set *write_setP)
+iperf_send(struct iperf_test *test, fd_set *write_setP, struct epoll_event *ev)
 {
     register int multisend, r, streams_active;
     register struct iperf_stream *sp;
@@ -1092,7 +1093,8 @@ iperf_send(struct iperf_test *test, fd_set *write_setP)
         SLIST_FOREACH(sp, &test->streams, streams) {
             if (! test->no_fq_socket_pacing ||
                 (sp->green_light &&
-                 (write_setP == NULL || FD_ISSET(sp->socket, write_setP)))) {
+                 (write_setP == NULL || FD_ISSET(sp->socket, write_setP) ||
+                  (ev && ev->data.fd == sp->socket)))) {
                 if ((r = sp->snd(sp)) < 0) {
                     if (r == NET_SOFTERROR)
                         break;
@@ -1127,17 +1129,18 @@ iperf_send(struct iperf_test *test, fd_set *write_setP)
 }
 
 int
-iperf_recv(struct iperf_test *test, fd_set *read_setP)
+iperf_recv(struct iperf_test *test, fd_set *read_setP, struct epoll_event *ev)
 {
     int r;
     struct iperf_stream *sp;
 
     SLIST_FOREACH(sp, &test->streams, streams) {
-        if (FD_ISSET(sp->socket, read_setP)) {
+        if (FD_ISSET(sp->socket, read_setP) || (ev && ev->data.fd == sp->socket)) {
             if ((r = sp->rcv(sp)) < 0) {
                 i_errno = IESTREAMREAD;
                 return r;
             }
+
             test->bytes_sent += r;
             ++test->blocks_sent;
             FD_CLR(sp->socket, read_setP);

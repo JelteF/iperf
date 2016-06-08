@@ -398,11 +398,11 @@ iperf_run_client(struct iperf_test * test)
 
             if (test->reverse) {
                 // Reverse mode. Client receives.
-                if (iperf_recv(test, &read_set) < 0)
+                if (iperf_recv(test, &read_set, NULL) < 0)
                     return -1;
             } else {
                 // Regular mode. Client sends.
-                if (iperf_send(test, &write_set) < 0)
+                if (iperf_send(test, &write_set, NULL) < 0)
                     return -1;
             }
 
@@ -437,7 +437,7 @@ iperf_run_client(struct iperf_test * test)
         // and gets blocked, so it can't receive state changes
         // from the client side.
         else if (test->reverse && test->state == TEST_END) {
-            if (iperf_recv(test, &read_set) < 0)
+            if (iperf_recv(test, &read_set, NULL) < 0)
                 return -1;
         }
     }
