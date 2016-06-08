@@ -31,6 +31,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/epoll.h>
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <arpa/inet.h>
@@ -58,11 +59,16 @@ iperf_create_streams(struct iperf_test *test)
         if ((s = test->protocol->connect(test)) < 0)
             return -1;
 
+        struct epoll_event ev;
+        ev.data.fd = s;
         if (test->sender)
-            FD_SET(s, &test->write_set);
+            ev.events=EPOLLOUT;
         else
-            FD_SET(s, &test->read_set);
-        if (s > test->max_fd) test->max_fd = s;
+            ev.events=EPOLLIN;
+        if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1) {
+            perror("epoll_ctl: stream_socket register failed");
+            return -1;
+        }
 
         sp = iperf_new_stream(test, s);
         if (!sp)
@@ -281,8 +287,11 @@ iperf_handle_message_client(struct iperf_test *test)
 int
 iperf_connect(struct iperf_test *test)
 {
-    FD_ZERO(&test->read_set);
-    FD_ZERO(&test->write_set);
+    test->epoll_fd = epoll_create(MAX_EPOLL_EVENTS);
+    if(test->epoll_fd < 0) {
+        printf("create epoll socket failed \n");
+        return -1;
+    }
 
     make_cookie(test->cookie);
 
@@ -300,8 +309,14 @@ iperf_connect(struct iperf_test *test)
         return -1;
     }
 
-    FD_SET(test->ctrl_sck, &test->read_set);
-    if (test->ctrl_sck > test->max_fd) test->max_fd = test->ctrl_sck;
+    struct epoll_event ev;
+    ev.events=EPOLLIN;
+    ev.data.fd = test->ctrl_sck;
+
+    if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, test->ctrl_sck, &ev)==-1) {
+        perror("epoll_ctl: ctrl_sck register failed");
+        return -1;
+    }
 
     return 0;
 }
@@ -331,11 +346,12 @@ int
 iperf_run_client(struct iperf_test * test)
 {
     int startup;
-    int result = 0;
+    int number_of_events;
     fd_set read_set, write_set;
     struct timeval now;
     struct timeval* timeout = NULL;
     struct iperf_stream *sp;
+    struct epoll_event events[MAX_EPOLL_EVENTS];
 
     if (test->affinity != -1)
         if (iperf_setaffinity(test, test->affinity) != 0)
@@ -368,77 +384,75 @@ iperf_run_client(struct iperf_test * test)
         memcpy(&write_set, &test->write_set, sizeof(fd_set));
         (void) gettimeofday(&now, NULL);
         timeout = tmr_timeout(&now);
-        result = select(test->max_fd + 1, &read_set, &write_set, NULL, timeout);
-        if (result < 0 && errno != EINTR) {
-              i_errno = IESELECT;
+        number_of_events = epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, -1);
+        if (number_of_events < 0 && errno != EINTR) {
+            i_errno = IESELECT;
             return -1;
         }
-        if (result > 0) {
-            if (FD_ISSET(test->ctrl_sck, &read_set)) {
+        for (int i = 0; i < number_of_events; i++) {
+            if (events[i].data.fd == test->ctrl_sck) {
                  if (iperf_handle_message_client(test) < 0) {
                     return -1;
                 }
-                FD_CLR(test->ctrl_sck, &read_set);
             }
-        }
+            if (test->state == TEST_RUNNING) {
 
-        if (test->state == TEST_RUNNING) {
+                /* Is this our first time really running? */
+                if (startup) {
+                    startup = 0;
 
-            /* Is this our first time really running? */
-            if (startup) {
-                startup = 0;
-
-                // Set non-blocking for non-UDP tests
-                if (test->protocol->id != Pudp) {
-                    SLIST_FOREACH(sp, &test->streams, streams) {
-                        setnonblocking(sp->socket, 1);
-                    }
-                }
-            }
-
-            if (test->reverse) {
-                // Reverse mode. Client receives.
-                if (iperf_recv(test, &read_set, NULL) < 0)
-                    return -1;
-            } else {
-                // Regular mode. Client sends.
-                if (iperf_send(test, &write_set, NULL) < 0)
-                    return -1;
-            }
-
-            /* Run the timers. */
-            (void) gettimeofday(&now, NULL);
-            tmr_run(&now);
-
-            /* Is the test done yet? */
-            if ((!test->omitting) &&
-                ((test->duration != 0 && test->done) ||
-                 (test->settings->bytes != 0 && test->bytes_sent >= test->settings->bytes) ||
-                 (test->settings->blocks != 0 && test->blocks_sent >= test->settings->blocks))) {
-
-                // Unset non-blocking for non-UDP tests
-                if (test->protocol->id != Pudp) {
-                    SLIST_FOREACH(sp, &test->streams, streams) {
-                        setnonblocking(sp->socket, 0);
+                    // Set non-blocking for non-UDP tests
+                    if (test->protocol->id != Pudp) {
+                        SLIST_FOREACH(sp, &test->streams, streams) {
+                            setnonblocking(sp->socket, 1);
+                        }
                     }
                 }
 
-                /* Yes, done!  Send TEST_END. */
-                test->done = 1;
-                cpu_util(test->cpu_util);
-                test->stats_callback(test);
-                if (iperf_set_send_state(test, TEST_END) != 0)
+                if (test->reverse) {
+                    // Reverse mode. Client receives.
+                    if (iperf_recv(test, &read_set, &events[i]) < 0)
+                        return -1;
+                } else {
+                    // Regular mode. Client sends.
+                    if (iperf_send(test, &write_set, &events[i]) < 0)
+                        return -1;
+                }
+
+                /* Run the timers. */
+                (void) gettimeofday(&now, NULL);
+                tmr_run(&now);
+
+                /* Is the test done yet? */
+                if ((!test->omitting) &&
+                    ((test->duration != 0 && test->done) ||
+                     (test->settings->bytes != 0 && test->bytes_sent >= test->settings->bytes) ||
+                     (test->settings->blocks != 0 && test->blocks_sent >= test->settings->blocks))) {
+
+                    // Unset non-blocking for non-UDP tests
+                    if (test->protocol->id != Pudp) {
+                        SLIST_FOREACH(sp, &test->streams, streams) {
+                            setnonblocking(sp->socket, 0);
+                        }
+                    }
+
+                    /* Yes, done!  Send TEST_END. */
+                    test->done = 1;
+                    cpu_util(test->cpu_util);
+                    test->stats_callback(test);
+                    if (iperf_set_send_state(test, TEST_END) != 0)
+                        return -1;
+                }
+            }
+            // If we're in reverse mode, continue draining the data
+            // connection(s) even if test is over.  This prevents a
+            // deadlock where the server side fills up its pipe(s)
+            // and gets blocked, so it can't receive state changes
+            // from the client side.
+            else if (test->reverse && test->state == TEST_END) {
+                if (iperf_recv(test, &read_set, &events[i]) < 0)
                     return -1;
             }
-        }
-        // If we're in reverse mode, continue draining the data
-        // connection(s) even if test is over.  This prevents a
-        // deadlock where the server side fills up its pipe(s)
-        // and gets blocked, so it can't receive state changes
-        // from the client side.
-        else if (test->reverse && test->state == TEST_END) {
-            if (iperf_recv(test, &read_set, NULL) < 0)
-                return -1;
         }
     }
 
