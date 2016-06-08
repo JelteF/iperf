@@ -529,26 +529,18 @@ iperf_run_server(struct iperf_test *test)
                             return -1;
                         }
 
+                        struct epoll_event ev;
+                        ev.data.fd = s;
                         if (test->sender) {
-                            struct epoll_event ev;
                             ev.events=EPOLLOUT;
-                            ev.data.fd = s;
-
-                            if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1) {
-                                perror("epoll_ctl: stream_socket register failed");
-                                return -1;
-                            }
+                        }
+                        else {
+                            ev.events=EPOLLIN;
                         }
 
-                        else {
-                            struct epoll_event ev;
-                            ev.events=EPOLLIN;
-                            ev.data.fd = s;
-
-                            if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1) {
-                                perror("epoll_ctl: stream_socket register failed");
-                                return -1;
-                            }
+                        if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1) {
+                            perror("epoll_ctl: stream_socket register failed");
+                            return -1;
                         }
 
                         /*
