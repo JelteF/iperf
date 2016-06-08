@@ -513,7 +513,7 @@ iperf_run_server(struct iperf_test *test)
 
                 if (events[i].data.fd == test->prot_listener) {
 
-                    if ((s = test->protocol->accept(test)) < 0) {
+                    if ((s = test->protocol->accept(test)) == -1) {
                         cleanup_server(test);
                         return -1;
                     }

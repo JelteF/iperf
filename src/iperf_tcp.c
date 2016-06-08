@@ -122,6 +122,7 @@ iperf_tcp_accept(struct iperf_test * test)
             return -1;
         }
         close(s);
+        return -2; // Return special value when closed
     }
 
     return s;
