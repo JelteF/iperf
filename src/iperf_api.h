@@ -211,8 +211,8 @@ void build_tcpinfo_message(struct iperf_interval_results *r, char *message);
 
 int iperf_set_send_state(struct iperf_test *test, signed char state);
 void iperf_check_throttle(struct iperf_stream *sp, struct timeval *nowP);
-int iperf_send(struct iperf_test *, fd_set *, struct epoll_event *) /* __attribute__((hot)) */;
-int iperf_recv(struct iperf_test *, fd_set *, struct epoll_event *);
+int iperf_send(struct iperf_test *, struct epoll_event *) /* __attribute__((hot)) */;
+int iperf_recv(struct iperf_test *, struct epoll_event *);
 void iperf_catch_sigend(void (*handler)(int));
 void iperf_got_sigend(struct iperf_test *test) __attribute__ ((noreturn));
 void usage();

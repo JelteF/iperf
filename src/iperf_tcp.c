@@ -152,7 +152,6 @@ iperf_tcp_listen(struct iperf_test *test)
      * It's not clear whether this is a requirement or a convenience.
      */
     if (test->no_delay || test->settings->mss || test->settings->socket_bufsize) {
-        FD_CLR(s, &test->read_set);
         close(s);
 
         snprintf(portstr, 6, "%d", test->server_port);

@@ -347,7 +347,6 @@ iperf_run_client(struct iperf_test * test)
 {
     int startup;
     int number_of_events;
-    fd_set read_set, write_set;
     struct timeval now;
     struct timeval* timeout = NULL;
     struct iperf_stream *sp;
@@ -380,8 +379,6 @@ iperf_run_client(struct iperf_test * test)
 
     startup = 1;
     while (test->state != IPERF_DONE) {
-        memcpy(&read_set, &test->read_set, sizeof(fd_set));
-        memcpy(&write_set, &test->write_set, sizeof(fd_set));
         (void) gettimeofday(&now, NULL);
         timeout = tmr_timeout(&now);
         number_of_events = epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, -1);
@@ -411,11 +408,11 @@ iperf_run_client(struct iperf_test * test)
 
                 if (test->reverse) {
                     // Reverse mode. Client receives.
-                    if (iperf_recv(test, &read_set, &events[i]) < 0)
+                    if (iperf_recv(test, &events[i]) < 0)
                         return -1;
                 } else {
                     // Regular mode. Client sends.
-                    if (iperf_send(test, &write_set, &events[i]) < 0)
+                    if (iperf_send(test, &events[i]) < 0)
                         return -1;
                 }
 
@@ -450,7 +447,7 @@ iperf_run_client(struct iperf_test * test)
             // and gets blocked, so it can't receive state changes
             // from the client side.
             else if (test->reverse && test->state == TEST_END) {
-                if (iperf_recv(test, &read_set, &events[i]) < 0)
+                if (iperf_recv(test, &events[i]) < 0)
                     return -1;
             }
         }

@@ -447,7 +447,6 @@ int
 iperf_run_server(struct iperf_test *test)
 {
     int number_of_events, s, streams_accepted;
-    fd_set read_set, write_set;
     struct iperf_stream *sp;
     struct timeval now;
     struct timeval* timeout;
@@ -484,9 +483,6 @@ iperf_run_server(struct iperf_test *test)
     streams_accepted = 0;
 
     while (test->state != IPERF_DONE) {
-
-        memcpy(&read_set, &test->read_set, sizeof(fd_set));
-        memcpy(&write_set, &test->write_set, sizeof(fd_set));
 
         (void) gettimeofday(&now, NULL);
         timeout = tmr_timeout(&now);
@@ -621,13 +617,13 @@ iperf_run_server(struct iperf_test *test)
             if (test->state == TEST_RUNNING) {
                 if (test->reverse) {
                     // Reverse mode. Server sends.
-                    if (iperf_send(test, &write_set, &events[i]) < 0) {
+                    if (iperf_send(test, &events[i]) < 0) {
                         cleanup_server(test);
                         return -1;
                     }
                 } else {
                     // Regular mode. Server receives.
-                    if (iperf_recv(test, &read_set, &events[i]) < 0) {
+                    if (iperf_recv(test, &events[i]) < 0) {
                         cleanup_server(test);
                         return -1;
                     }

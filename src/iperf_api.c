@@ -1064,15 +1064,13 @@ iperf_check_throttle(struct iperf_stream *sp, struct timeval *nowP)
     bits_per_second = sp->result->bytes_sent * 8 / seconds;
     if (bits_per_second < sp->test->settings->rate) {
         sp->green_light = 1;
-        FD_SET(sp->socket, &sp->test->write_set);
     } else {
         sp->green_light = 0;
-        FD_CLR(sp->socket, &sp->test->write_set);
     }
 }
 
 int
-iperf_send(struct iperf_test *test, fd_set *write_setP, struct epoll_event *ev)
+iperf_send(struct iperf_test *test, struct epoll_event *ev)
 {
     register int multisend, r, streams_active;
     register struct iperf_stream *sp;
@@ -1091,9 +1089,7 @@ iperf_send(struct iperf_test *test, fd_set *write_setP, struct epoll_event *ev)
             gettimeofday(&now, NULL);
         streams_active = 0;
         SLIST_FOREACH(sp, &test->streams, streams) {
-            if (sp->green_light &&
-                 (write_setP == NULL || FD_ISSET(sp->socket, write_setP) ||
-                  (ev && ev->data.fd == sp->socket))) {
+            if (sp->green_light && ev->data.fd == sp->socket) {
                 if ((r = sp->snd(sp)) < 0) {
                     if (r == NET_SOFTERROR)
                         break;
@@ -1119,22 +1115,18 @@ iperf_send(struct iperf_test *test, fd_set *write_setP, struct epoll_event *ev)
         SLIST_FOREACH(sp, &test->streams, streams)
             iperf_check_throttle(sp, &now);
     }
-    if (write_setP != NULL)
-        SLIST_FOREACH(sp, &test->streams, streams)
-            if (FD_ISSET(sp->socket, write_setP))
-                FD_CLR(sp->socket, write_setP);
 
     return 0;
 }
 
 int
-iperf_recv(struct iperf_test *test, fd_set *read_setP, struct epoll_event *ev)
+iperf_recv(struct iperf_test *test, struct epoll_event *ev)
 {
     int r;
     struct iperf_stream *sp;
 
     SLIST_FOREACH(sp, &test->streams, streams) {
-        if (FD_ISSET(sp->socket, read_setP) || (ev && ev->data.fd == sp->socket)) {
+        if (ev->data.fd == sp->socket) {
             if ((r = sp->rcv(sp)) < 0) {
                 i_errno = IESTREAMREAD;
                 return r;
@@ -1142,7 +1134,6 @@ iperf_recv(struct iperf_test *test, fd_set *read_setP, struct epoll_event *ev)
 
             test->bytes_sent += r;
             ++test->blocks_sent;
-            FD_CLR(sp->socket, read_setP);
         }
     }
 
@@ -2060,9 +2051,6 @@ iperf_reset_test(struct iperf_test *test)
 
     test->reverse = 0;
     test->no_delay = 0;
-
-    FD_ZERO(&test->read_set);
-    FD_ZERO(&test->write_set);
 
     test->num_streams = 1;
     test->settings->socket_bufsize = 0;

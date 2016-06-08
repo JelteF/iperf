@@ -244,10 +244,6 @@ struct iperf_test
     int       multisend;
 
     char     *json_output_string; /* rendered JSON output if json_output is set */
-    /* Select related parameters */
-    int       max_fd;
-    fd_set    read_set;                         /* set of read sockets */
-    fd_set    write_set;                        /* set of write sockets */
 
     /* Epoll related parameters */
     int       epoll_fd;

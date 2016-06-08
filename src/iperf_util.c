@@ -160,20 +160,6 @@ delay(int64_t ns)
     return 0;
 }
 
-# ifdef DELAY_SELECT_METHOD
-int
-delay(int us)
-{
-    struct timeval tv;
-
-    tv.tv_sec = 0;
-    tv.tv_usec = us;
-    (void) select(1, (fd_set *) 0, (fd_set *) 0, (fd_set *) 0, &tv);
-    return 1;
-}
-#endif
-
-
 void
 cpu_util(double pcpu[3])
 {
@@ -375,24 +361,4 @@ iperf_json_printf(const char *format, ...)
     }
     va_end(argp);
     return o;
-}
-
-/* Debugging routine to dump out an fd_set. */
-void
-iperf_dump_fdset(FILE *fp, char *str, int nfds, fd_set *fds)
-{
-    int fd;
-    int comma;
-
-    fprintf(fp, "%s: [", str);
-    comma = 0;
-    for (fd = 0; fd < nfds; ++fd) {
-        if (FD_ISSET(fd, fds)) {
-            if (comma)
-                fprintf(fp, ", ");
-            fprintf(fp, "%d", fd);
-            comma = 1;
-        }
-    }
-    fprintf(fp, "]\n");
 }
