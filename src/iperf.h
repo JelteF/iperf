@@ -46,6 +46,10 @@
 #include "queue.h"
 #include "cjson.h"
 
+#include "anssock_intf.h"
+#include "ans_errno.h"
+
+
 typedef uint64_t iperf_size_t;
 
 struct iperf_interval_results
