@@ -115,7 +115,7 @@ iperf_sctp_accept(struct iperf_test * test)
     struct sockaddr_storage addr;
 
     len = sizeof(addr);
-    s = accept(test->listener, (struct sockaddr *) &addr, &len);
+    s = anssock_accept(test->listener, (struct sockaddr *) &addr, &len);
     if (s < 0) {
         i_errno = IESTREAMCONNECT;
         return -1;
@@ -131,7 +131,7 @@ iperf_sctp_accept(struct iperf_test * test)
             i_errno = IESENDMESSAGE;
             return -1;
         }
-        close(s);
+        anssock_close(s);
     }
 
     return s;
@@ -154,7 +154,7 @@ iperf_sctp_listen(struct iperf_test *test)
     char portstr[6];
     int s, opt;
 
-    close(test->listener);
+    anssock_close(test->listener);
 
     snprintf(portstr, 6, "%d", test->server_port);
     memset(&hints, 0, sizeof(hints));
@@ -166,7 +166,7 @@ iperf_sctp_listen(struct iperf_test *test)
         return -1;
     }
 
-    if ((s = socket(res->ai_family, SOCK_STREAM, IPPROTO_SCTP)) < 0) {
+    if ((s = anssock_socket(res->ai_family, SOCK_STREAM, IPPROTO_SCTP)) < 0) {
         freeaddrinfo(res);
         i_errno = IESTREAMLISTEN;
         return -1;
@@ -178,9 +178,9 @@ iperf_sctp_listen(struct iperf_test *test)
             opt = 0;
         else if (test->settings->domain == AF_INET6)
             opt = 1;
-        if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY,
+        if (anssock_setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY,
                        (char *) &opt, sizeof(opt)) < 0) {
-            close(s);
+            anssock_close(s);
             freeaddrinfo(res);
             i_errno = IEPROTOCOL;
             return -1;
@@ -189,21 +189,21 @@ iperf_sctp_listen(struct iperf_test *test)
 #endif /* IPV6_V6ONLY */
 
     opt = 1;
-    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-        close(s);
+    if (anssock_setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+        anssock_close(s);
         freeaddrinfo(res);
         i_errno = IEREUSEADDR;
         return -1;
     }
 
-    /* servers must call sctp_bindx() _instead_ of bind() */
+    /* servers must call sctp_bindx() _instead_ of anssock_bind() */
     if (!TAILQ_EMPTY(&test->xbind_addrs)) {
         freeaddrinfo(res);
         if (iperf_sctp_bindx(test, s, IPERF_SCTP_SERVER))
             return -1;
     } else
-    if (bind(s, (struct sockaddr *) res->ai_addr, res->ai_addrlen) < 0) {
-        close(s);
+    if (anssock_bind(s, (struct sockaddr *) res->ai_addr, res->ai_addrlen) < 0) {
+        anssock_close(s);
         freeaddrinfo(res);
         i_errno = IESTREAMLISTEN;
         return -1;
@@ -211,7 +211,7 @@ iperf_sctp_listen(struct iperf_test *test)
 
     freeaddrinfo(res);
 
-    if (listen(s, 5) < 0) {
+    if (anssock_listen(s, 5) < 0) {
         i_errno = IESTREAMLISTEN;
         return -1;
     }
@@ -259,7 +259,7 @@ iperf_sctp_connect(struct iperf_test *test)
         return -1;
     }
 
-    s = socket(server_res->ai_family, SOCK_STREAM, IPPROTO_SCTP);
+    s = anssock_socket(server_res->ai_family, SOCK_STREAM, IPPROTO_SCTP);
     if (s < 0) {
         if (test->bind_address)
             freeaddrinfo(local_res);
@@ -270,8 +270,8 @@ iperf_sctp_connect(struct iperf_test *test)
 
     if (test->no_delay != 0) {
          opt = 1;
-         if (setsockopt(s, IPPROTO_SCTP, SCTP_NODELAY, &opt, sizeof(opt)) < 0) {
-             close(s);
+         if (anssock_setsockopt(s, IPPROTO_SCTP, SCTP_NODELAY, &opt, sizeof(opt)) < 0) {
+             anssock_close(s);
              freeaddrinfo(server_res);
              i_errno = IESETNODELAY;
              return -1;
@@ -301,8 +301,8 @@ iperf_sctp_connect(struct iperf_test *test)
 #endif
         av.assoc_value = test->settings->mss;
 
-        if (setsockopt(s, IPPROTO_SCTP, SCTP_MAXSEG, &av, sizeof(av)) < 0) {
-            close(s);
+        if (anssock_setsockopt(s, IPPROTO_SCTP, SCTP_MAXSEG, &av, sizeof(av)) < 0) {
+            anssock_close(s);
             freeaddrinfo(server_res);
             i_errno = IESETMSS;
             return -1;
@@ -314,9 +314,9 @@ iperf_sctp_connect(struct iperf_test *test)
          * Solaris might not support this option.  If it doesn't work,
          * ignore the error (at least for now).
          */
-        if (setsockopt(s, IPPROTO_SCTP, SCTP_MAXSEG, &opt, sizeof(opt)) < 0 &&
+        if (anssock_setsockopt(s, IPPROTO_SCTP, SCTP_MAXSEG, &opt, sizeof(opt)) < 0 &&
             errno != ENOPROTOOPT) {
-            close(s);
+            anssock_close(s);
             freeaddrinfo(server_res);
             i_errno = IESETMSS;
             return -1;
@@ -330,23 +330,23 @@ iperf_sctp_connect(struct iperf_test *test)
         memset(&initmsg, 0, sizeof(struct sctp_initmsg));
         initmsg.sinit_num_ostreams = test->settings->num_ostreams;
 
-        if (setsockopt(s, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(struct sctp_initmsg)) < 0) {
-                close(s);
+        if (anssock_setsockopt(s, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(struct sctp_initmsg)) < 0) {
+                anssock_close(s);
                 freeaddrinfo(server_res);
                 i_errno = IESETSCTPNSTREAM;
                 return -1;
         }
     }
 
-    /* clients must call bind() followed by sctp_bindx() before connect() */
+    /* clients must call anssock_bind() followed by sctp_bindx() before anssock_connect() */
     if (!TAILQ_EMPTY(&test->xbind_addrs)) {
         if (iperf_sctp_bindx(test, s, IPERF_SCTP_CLIENT))
             return -1;
     }
 
     /* TODO support sctp_connectx() to avoid heartbeating. */
-    if (connect(s, (struct sockaddr *) server_res->ai_addr, server_res->ai_addrlen) < 0 && errno != EINPROGRESS) {
-        close(s);
+    if (anssock_connect(s, (struct sockaddr *) server_res->ai_addr, server_res->ai_addrlen) < 0 && errno != EINPROGRESS) {
+        anssock_close(s);
         freeaddrinfo(server_res);
         i_errno = IESTREAMCONNECT;
         return -1;
@@ -355,7 +355,7 @@ iperf_sctp_connect(struct iperf_test *test)
 
     /* Send cookie for verification */
     if (Nwrite(s, test->cookie, COOKIE_SIZE, Psctp) < 0) {
-        close(s);
+        anssock_close(s);
         i_errno = IESENDCOOKIE;
         return -1;
     }
@@ -368,9 +368,9 @@ iperf_sctp_connect(struct iperf_test *test)
      * work.
      */
     opt = 0;
-    if (setsockopt(s, IPPROTO_SCTP, SCTP_DISABLE_FRAGMENTS, &opt, sizeof(opt)) < 0 &&
+    if (anssock_setsockopt(s, IPPROTO_SCTP, SCTP_DISABLE_FRAGMENTS, &opt, sizeof(opt)) < 0 &&
         errno != ENOPROTOOPT) {
-        close(s);
+        anssock_close(s);
         freeaddrinfo(server_res);
         i_errno = IESETSCTPDISABLEFRAG;
         return -1;
@@ -435,8 +435,8 @@ iperf_sctp_bindx(struct iperf_test *test, int s, int is_server)
         servname = portstr;
     }
 
-    /* client: must pop first -X address and call bind().
-     * sctp_bindx() must see the ephemeral port chosen by bind().
+    /* client: must pop first -X address and call anssock_bind().
+     * sctp_bindx() must see the ephemeral port chosen by anssock_bind().
      * we deliberately ignore the -B argument in this case.
      */
     if (!is_server) {
@@ -460,7 +460,7 @@ iperf_sctp_bindx(struct iperf_test *test, int s, int is_server)
             retval = -1;
             goto out;
         }
-        if (bind(s, (struct sockaddr *)ai->ai_addr, ai->ai_addrlen) < 0) {
+        if (anssock_bind(s, (struct sockaddr *)ai->ai_addr, ai->ai_addrlen) < 0) {
             i_errno = IESETSCTPBINDX;
             retval = -1;
             goto out;
@@ -525,7 +525,7 @@ iperf_sctp_bindx(struct iperf_test *test, int s, int is_server)
     }
 
     if (sctp_bindx(s, xaddrs, nxaddrs, SCTP_BINDX_ADD_ADDR) == -1) {
-        close(s);
+        anssock_close(s);
         free(xaddrs);
         i_errno = IESETSCTPBINDX;
         retval = -1;

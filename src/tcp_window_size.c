@@ -65,7 +65,7 @@
  * If bufsize > 0, set the TCP window size (via the socket buffer
  * sizes) for sock. Otherwise leave it as the system default.
  *
- * This must be called prior to calling listen() or connect() on
+ * This must be called prior to calling anssock_listen() or anssock_connect() on
  * the socket, for TCP window sizes > 64 KB to be effective.
  *
  * This now works on UNICOS also, by setting TCP_WINSHIFT.
@@ -85,12 +85,12 @@ set_tcp_windowsize(int sock, int bufsize, int dir)
     if (bufsize > 0)
     {
 	/*
-         * note: results are verified after connect() or listen(), since
+         * note: results are verified after anssock_connect() or anssock_listen(), since
          * some OS's don't show the corrected value until then.
          */
 //        printf("Setting TCP buffer to size: %d\n", bufsize);
 	newbufsize = bufsize;
-	rc = setsockopt(sock, SOL_SOCKET, dir, (char *) &newbufsize, sizeof(newbufsize));
+	rc = anssock_setsockopt(sock, SOL_SOCKET, dir, (char *) &newbufsize, sizeof(newbufsize));
 	if (rc < 0)
 	    return rc;
     } else {
@@ -115,7 +115,7 @@ get_tcp_windowsize(int sock, int dir)
 
     /* send buffer -- query for buffer size */
     len = sizeof bufsize;
-    rc = getsockopt(sock, SOL_SOCKET, dir, (char *) &bufsize, &len);
+    rc = anssock_getsockopt(sock, SOL_SOCKET, dir, (char *) &bufsize, &len);
 
     if (rc < 0)
 	return rc;

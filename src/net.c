@@ -39,6 +39,10 @@
 #include <string.h>
 #include <sys/fcntl.h>
 
+#include "anssock_intf.h"
+#include "ans_errno.h"
+
+
 #ifdef HAVE_SENDFILE
 #ifdef linux
 #include <sys/sendfile.h>
@@ -85,7 +89,7 @@ netdial(int domain, int proto, char *local, int local_port, char *server, int po
     if (getaddrinfo(server, NULL, &hints, &server_res) != 0)
         return -1;
 
-    s = socket(server_res->ai_family, proto, 0);
+    s = anssock_socket(server_res->ai_family, proto, 0);
     if (s < 0) {
 	if (local)
 	    freeaddrinfo(local_res);
@@ -101,8 +105,8 @@ netdial(int domain, int proto, char *local, int local_port, char *server, int po
             local_res->ai_addr = (struct sockaddr *)lcladdr;
         }
 
-        if (bind(s, (struct sockaddr *) local_res->ai_addr, local_res->ai_addrlen) < 0) {
-	    close(s);
+        if (anssock_bind(s, (struct sockaddr *) local_res->ai_addr, local_res->ai_addrlen) < 0) {
+	    anssock_close(s);
 	    freeaddrinfo(local_res);
 	    freeaddrinfo(server_res);
             return -1;
@@ -111,8 +115,8 @@ netdial(int domain, int proto, char *local, int local_port, char *server, int po
     }
 
     ((struct sockaddr_in *) server_res->ai_addr)->sin_port = htons(port);
-    if (connect(s, (struct sockaddr *) server_res->ai_addr, server_res->ai_addrlen) < 0 && errno != EINPROGRESS) {
-	close(s);
+    if (anssock_connect(s, (struct sockaddr *) server_res->ai_addr, server_res->ai_addrlen) < 0 && errno != EINPROGRESS) {
+	anssock_close(s);
 	freeaddrinfo(server_res);
         return -1;
     }
@@ -155,16 +159,16 @@ netannounce(int domain, int proto, char *local, int port)
     if (getaddrinfo(local, portstr, &hints, &res) != 0)
         return -1;
 
-    s = socket(res->ai_family, proto, 0);
+    s = anssock_socket(res->ai_family, proto, 0);
     if (s < 0) {
 	freeaddrinfo(res);
         return -1;
     }
 
     opt = 1;
-    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR,
+    if (anssock_setsockopt(s, SOL_SOCKET, SO_REUSEADDR,
 		   (char *) &opt, sizeof(opt)) < 0) {
-	close(s);
+	anssock_close(s);
 	freeaddrinfo(res);
 	return -1;
     }
@@ -182,17 +186,17 @@ netannounce(int domain, int proto, char *local, int port)
 	    opt = 0;
 	else
 	    opt = 1;
-	if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY,
+	if (anssock_setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY,
 		       (char *) &opt, sizeof(opt)) < 0) {
-	    close(s);
+	    anssock_close(s);
 	    freeaddrinfo(res);
 	    return -1;
 	}
     }
 #endif /* IPV6_V6ONLY */
 
-    if (bind(s, (struct sockaddr *) res->ai_addr, res->ai_addrlen) < 0) {
-        close(s);
+    if (anssock_bind(s, (struct sockaddr *) res->ai_addr, res->ai_addrlen) < 0) {
+        anssock_close(s);
 	freeaddrinfo(res);
         return -1;
     }
@@ -200,8 +204,8 @@ netannounce(int domain, int proto, char *local, int port)
     freeaddrinfo(res);
 
     if (proto == SOCK_STREAM) {
-        if (listen(s, 5) < 0) {
-	    close(s);
+        if (anssock_listen(s, 5) < 0) {
+	    anssock_close(s);
             return -1;
         }
     }
@@ -221,7 +225,7 @@ Nread(int fd, char *buf, size_t count, int prot)
     register size_t nleft = count;
 
     while (nleft > 0) {
-        r = read(fd, buf, nleft);
+        r = anssock_read(fd, buf, nleft);
         if (r < 0) {
             if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
                 break;
@@ -248,7 +252,7 @@ Nwrite(int fd, const char *buf, size_t count, int prot)
     register size_t nleft = count;
 
     while (nleft > 0) {
-	r = write(fd, buf, nleft);
+	r = anssock_write(fd, buf, nleft);
 	if (r < 0) {
 	    switch (errno) {
 		case EINTR:
@@ -369,7 +373,7 @@ getsock_tcp_mss(int inSock)
 
     /* query for mss */
     len = sizeof(mss);
-    rc = getsockopt(inSock, IPPROTO_TCP, TCP_MAXSEG, (char *)&mss, &len);
+    rc = anssock_getsockopt(inSock, IPPROTO_TCP, TCP_MAXSEG, (char *)&mss, &len);
     if (rc == -1) {
 	perror("getsockopt TCP_MAXSEG");
 	return -1;
@@ -394,7 +398,7 @@ set_tcp_options(int sock, int no_delay, int mss)
 
     if (no_delay == 1) {
         len = sizeof(no_delay);
-        rc = setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&no_delay, len);
+        rc = anssock_setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&no_delay, len);
         if (rc == -1) {
             perror("setsockopt TCP_NODELAY");
             return -1;
@@ -408,13 +412,13 @@ set_tcp_options(int sock, int no_delay, int mss)
         /* set */
         new_mss = mss;
         len = sizeof(new_mss);
-        rc = setsockopt(sock, IPPROTO_TCP, TCP_MAXSEG, (char *)&new_mss, len);
+        rc = anssock_setsockopt(sock, IPPROTO_TCP, TCP_MAXSEG, (char *)&new_mss, len);
         if (rc == -1) {
             perror("setsockopt TCP_MAXSEG");
             return -1;
         }
         /* verify results */
-        rc = getsockopt(sock, IPPROTO_TCP, TCP_MAXSEG, (char *)&new_mss, &len);
+        rc = anssock_getsockopt(sock, IPPROTO_TCP, TCP_MAXSEG, (char *)&new_mss, &len);
         if (rc == -1) {
             perror("getsockopt TCP_MAXSEG");
             return -1;
@@ -460,7 +464,7 @@ getsockdomain(int sock)
     struct sockaddr_storage sa;
     socklen_t len = sizeof(sa);
 
-    if (getsockname(sock, (struct sockaddr *)&sa, &len) < 0) {
+    if (anssock_getsockname(sock, (struct sockaddr *)&sa, &len) < 0) {
         return -1;
     }
     return ((struct sockaddr *) &sa)->sa_family;

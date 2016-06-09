@@ -120,7 +120,7 @@ iperf_server_listen(struct iperf_test *test)
 
 
 
-    test->epoll_fd = epoll_create(MAX_EPOLL_EVENTS);
+    test->epoll_fd = anssock_epoll_create(MAX_EPOLL_EVENTS);
     if(test->epoll_fd < 0) {
         printf("create epoll socket failed \n");
         return -1;
@@ -130,7 +130,7 @@ iperf_server_listen(struct iperf_test *test)
     ev.events=EPOLLIN;
     ev.data.fd = test->listener;
 
-    if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, test->listener, &ev)==-1) {
+    if(anssock_epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, test->listener, &ev)==-1) {
         perror("epoll_ctl: listener register failed");
         return -1;
     }
@@ -148,7 +148,7 @@ iperf_accept(struct iperf_test *test)
     struct sockaddr_storage addr;
 
     len = sizeof(addr);
-    if ((s = accept(test->listener, (struct sockaddr *) &addr, &len)) < 0) {
+    if ((s = anssock_accept(test->listener, (struct sockaddr *) &addr, &len)) < 0) {
         i_errno = IEACCEPT;
         return -1;
     }
@@ -165,7 +165,7 @@ iperf_accept(struct iperf_test *test)
         ev.events=EPOLLIN;
         ev.data.fd = test->ctrl_sck;
 
-        if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, test->ctrl_sck, &ev)==-1) {
+        if(anssock_epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, test->ctrl_sck, &ev)==-1) {
             perror("epoll_ctl: ctrl_sck register failed");
             return -1;
         }
@@ -190,7 +190,7 @@ iperf_accept(struct iperf_test *test)
             i_errno = IESENDMESSAGE;
             return -1;
         }
-        close(s);
+        anssock_close(s);
     }
 
 
@@ -226,7 +226,7 @@ iperf_handle_message_server(struct iperf_test *test)
             cpu_util(test->cpu_util);
             test->stats_callback(test);
             SLIST_FOREACH(sp, &test->streams, streams) {
-                close(sp->socket);
+                anssock_close(sp->socket);
             }
             test->reporter_callback(test);
             if (iperf_set_send_state(test, EXCHANGE_RESULTS) != 0)
@@ -254,7 +254,7 @@ iperf_handle_message_server(struct iperf_test *test)
             // XXX: Remove this line below!
             iperf_err(test, "the client has terminated");
             SLIST_FOREACH(sp, &test->streams, streams) {
-                close(sp->socket);
+                anssock_close(sp->socket);
             }
             test->state = IPERF_DONE;
             break;
@@ -272,7 +272,7 @@ iperf_test_reset(struct iperf_test *test)
 {
     struct iperf_stream *sp;
 
-    close(test->ctrl_sck);
+    anssock_close(test->ctrl_sck);
 
     /* Free streams */
     while (!SLIST_EMPTY(&test->streams)) {
@@ -425,8 +425,8 @@ static void
 cleanup_server(struct iperf_test *test)
 {
     /* Close open test sockets */
-    close(test->ctrl_sck);
-    close(test->listener);
+    anssock_close(test->ctrl_sck);
+    anssock_close(test->listener);
 
     /* Cancel any remaining timers. */
     if (test->stats_timer != NULL) {
@@ -486,7 +486,7 @@ iperf_run_server(struct iperf_test *test)
 
         (void) gettimeofday(&now, NULL);
         timeout = tmr_timeout(&now);
-        number_of_events = epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, -1);
+        number_of_events = anssock_epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, -1);
         if (number_of_events < 0 && errno != EINTR) {
             cleanup_server(test);
             i_errno = IESELECT;
@@ -537,8 +537,8 @@ iperf_run_server(struct iperf_test *test)
                         // Modify this socket or add if it it doesn't exist
                         // For UDP it needs to be modified and for TCP it needs
                         // to be added.
-                        if(epoll_ctl(test->epoll_fd, EPOLL_CTL_MOD, s, &ev)==-1) {
-                            if (errno != ENOENT || epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1) {
+                        if(anssock_epoll_ctl(test->epoll_fd, EPOLL_CTL_MOD, s, &ev)==-1) {
+                            if (errno != ENOENT || anssock_epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1) {
                                 perror("epoll_ctl: stream_socket register failed");
                                 return -1;
                             }
@@ -563,10 +563,10 @@ iperf_run_server(struct iperf_test *test)
 
                 if (streams_accepted == test->num_streams) {
                     if (test->protocol->id != Ptcp) {
-                        close(test->prot_listener);
+                        anssock_close(test->prot_listener);
                     } else {
                         if (test->no_delay || test->settings->mss || test->settings->socket_bufsize) {
-                            close(test->listener);
+                            anssock_close(test->listener);
                             if ((s = netannounce(test->settings->domain, Ptcp, test->bind_address, test->server_port)) < 0) {
                                 cleanup_server(test);
                                 i_errno = IELISTEN;
@@ -578,7 +578,7 @@ iperf_run_server(struct iperf_test *test)
                             ev.events=EPOLLIN;
                             ev.data.fd = test->listener;
 
-                            if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, test->listener, &ev)==-1) {
+                            if(anssock_epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, test->listener, &ev)==-1) {
                                 perror("epoll_ctl: stream_socket register failed");
                                 return -1;
                             }

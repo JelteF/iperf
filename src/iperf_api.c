@@ -564,7 +564,7 @@ iperf_on_connect(struct iperf_test *test)
         }
     } else {
         len = sizeof(sa);
-        getpeername(test->ctrl_sck, (struct sockaddr *) &sa, &len);
+        anssock_getpeername(test->ctrl_sck, (struct sockaddr *) &sa, &len);
         if (getsockdomain(test->ctrl_sck) == AF_INET) {
             sa_inP = (struct sockaddr_in *) &sa;
             inet_ntop(AF_INET, &sa_inP->sin_addr, ipr, sizeof(ipr));
@@ -587,7 +587,7 @@ iperf_on_connect(struct iperf_test *test)
                 cJSON_AddIntToObject(test->json_start, "tcp_mss", test->settings->mss);
             else {
                 len = sizeof(opt);
-                getsockopt(test->ctrl_sck, IPPROTO_TCP, TCP_MAXSEG, &opt, &len);
+                anssock_getsockopt(test->ctrl_sck, IPPROTO_TCP, TCP_MAXSEG, &opt, &len);
                 cJSON_AddIntToObject(test->json_start, "tcp_mss_default", opt);
             }
         }
@@ -598,7 +598,7 @@ iperf_on_connect(struct iperf_test *test)
                 iprintf(test, "      TCP MSS: %d\n", test->settings->mss);
             else {
                 len = sizeof(opt);
-                getsockopt(test->ctrl_sck, IPPROTO_TCP, TCP_MAXSEG, &opt, &len);
+                anssock_getsockopt(test->ctrl_sck, IPPROTO_TCP, TCP_MAXSEG, &opt, &len);
                 iprintf(test, "      TCP MSS: %d (default)\n", opt);
             }
         }
@@ -1247,7 +1247,7 @@ iperf_exchange_parameters(struct iperf_test *test)
         ev.data.fd = s;
 
         // Add this socket to epoll, if it isn't already added
-        if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1 && errno != EEXIST) {
+        if(anssock_epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1 && errno != EEXIST) {
             perror("epoll_ctl: exchange_parameters register failed");
             return -1;
         }
@@ -2625,9 +2625,9 @@ iperf_free_stream(struct iperf_stream *sp)
 
     /* XXX: need to free interval list too! */
     munmap(sp->buffer, sp->test->settings->blksize);
-    close(sp->buffer_fd);
+    anssock_close(sp->buffer_fd);
     if (sp->diskfile_fd >= 0)
-        close(sp->diskfile_fd);
+        anssock_close(sp->diskfile_fd);
     for (irp = TAILQ_FIRST(&sp->result->interval_results); irp != NULL; irp = nirp) {
         nirp = TAILQ_NEXT(irp, irlistentries);
         free(irp);
@@ -2730,7 +2730,7 @@ iperf_new_stream(struct iperf_test *test, int s)
 
     /* Initialize stream */
     if (iperf_init_stream(sp, test) < 0) {
-        close(sp->buffer_fd);
+        anssock_close(sp->buffer_fd);
         munmap(sp->buffer, sp->test->settings->blksize);
         free(sp->result);
         free(sp);
@@ -2749,12 +2749,12 @@ iperf_init_stream(struct iperf_stream *sp, struct iperf_test *test)
     int opt;
 
     len = sizeof(struct sockaddr_storage);
-    if (getsockname(sp->socket, (struct sockaddr *) &sp->local_addr, &len) < 0) {
+    if (anssock_getsockname(sp->socket, (struct sockaddr *) &sp->local_addr, &len) < 0) {
         i_errno = IEINITSTREAM;
         return -1;
     }
     len = sizeof(struct sockaddr_storage);
-    if (getpeername(sp->socket, (struct sockaddr *) &sp->remote_addr, &len) < 0) {
+    if (anssock_getpeername(sp->socket, (struct sockaddr *) &sp->remote_addr, &len) < 0) {
         i_errno = IEINITSTREAM;
         return -1;
     }
@@ -2763,7 +2763,7 @@ iperf_init_stream(struct iperf_stream *sp, struct iperf_test *test)
     if ((opt = test->settings->tos)) {
         if (getsockdomain(sp->socket) == AF_INET6) {
 #ifdef IPV6_TCLASS
-            if (setsockopt(sp->socket, IPPROTO_IPV6, IPV6_TCLASS, &opt, sizeof(opt)) < 0) {
+            if (anssock_setsockopt(sp->socket, IPPROTO_IPV6, IPV6_TCLASS, &opt, sizeof(opt)) < 0) {
                 i_errno = IESETCOS;
                 return -1;
             }
@@ -2772,7 +2772,7 @@ iperf_init_stream(struct iperf_stream *sp, struct iperf_test *test)
             return -1;
 #endif
         } else {
-            if (setsockopt(sp->socket, IPPROTO_IP, IP_TOS, &opt, sizeof(opt)) < 0) {
+            if (anssock_setsockopt(sp->socket, IPPROTO_IP, IP_TOS, &opt, sizeof(opt)) < 0) {
                 i_errno = IESETTOS;
                 return -1;
             }
@@ -2817,7 +2817,7 @@ diskfile_send(struct iperf_stream *sp)
 {
     int r;
 
-    r = read(sp->diskfile_fd, sp->buffer, sp->test->settings->blksize);
+    r = anssock_read(sp->diskfile_fd, sp->buffer, sp->test->settings->blksize);
     if (r == 0)
         sp->test->done = 1;
     else
@@ -2832,7 +2832,7 @@ diskfile_recv(struct iperf_stream *sp)
 
     r = sp->rcv2(sp);
     if (r > 0) {
-        (void) write(sp->diskfile_fd, sp->buffer, r);
+        (void) anssock_write(sp->diskfile_fd, sp->buffer, r);
         (void) fsync(sp->diskfile_fd);
     }
     return r;
@@ -2892,10 +2892,10 @@ iperf_create_pidfile(struct iperf_test *test)
             return -1;
         }
         snprintf(buf, sizeof(buf), "%d", getpid()); /* no trailing newline */
-        if (write(fd, buf, strlen(buf) + 1) < 0) {
+        if (anssock_write(fd, buf, strlen(buf) + 1) < 0) {
             return -1;
         }
-        if (close(fd) < 0) {
+        if (anssock_close(fd) < 0) {
             return -1;
         };
     }

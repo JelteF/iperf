@@ -65,7 +65,7 @@ iperf_create_streams(struct iperf_test *test)
             ev.events=EPOLLOUT;
         else
             ev.events=EPOLLIN;
-        if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1) {
+        if(anssock_epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1) {
             perror("epoll_ctl: stream_socket register failed");
             return -1;
         }
@@ -199,8 +199,8 @@ iperf_handle_message_client(struct iperf_test *test)
     int rval;
     int32_t err;
 
-    /*!!! Why is this read() and not Nread()? */
-    if ((rval = read(test->ctrl_sck, (char*) &test->state, sizeof(signed char))) <= 0) {
+    /*!!! Why is this anssock_read() and not Nread()? */
+    if ((rval = anssock_read(test->ctrl_sck, (char*) &test->state, sizeof(signed char))) <= 0) {
         if (rval == 0) {
             i_errno = IECTRLCLOSE;
             return -1;
@@ -287,7 +287,7 @@ iperf_handle_message_client(struct iperf_test *test)
 int
 iperf_connect(struct iperf_test *test)
 {
-    test->epoll_fd = epoll_create(MAX_EPOLL_EVENTS);
+    test->epoll_fd = anssock_epoll_create(MAX_EPOLL_EVENTS);
     if(test->epoll_fd < 0) {
         printf("create epoll socket failed \n");
         return -1;
@@ -313,7 +313,7 @@ iperf_connect(struct iperf_test *test)
     ev.events=EPOLLIN;
     ev.data.fd = test->ctrl_sck;
 
-    if(epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, test->ctrl_sck, &ev)==-1) {
+    if(anssock_epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, test->ctrl_sck, &ev)==-1) {
         perror("epoll_ctl: ctrl_sck register failed");
         return -1;
     }
@@ -329,7 +329,7 @@ iperf_client_end(struct iperf_test *test)
 
     /* Close all stream sockets */
     SLIST_FOREACH(sp, &test->streams, streams) {
-        close(sp->socket);
+        anssock_close(sp->socket);
     }
 
     /* show final summary */
@@ -381,7 +381,7 @@ iperf_run_client(struct iperf_test * test)
     while (test->state != IPERF_DONE) {
         (void) gettimeofday(&now, NULL);
         timeout = tmr_timeout(&now);
-        number_of_events = epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, -1);
+        number_of_events = anssock_epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, -1);
         if (number_of_events < 0 && errno != EINTR) {
             i_errno = IESELECT;
             return -1;

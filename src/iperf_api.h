@@ -29,6 +29,8 @@
 
 #include <sys/time.h>
 #include <setjmp.h>
+#include "anssock_intf.h"
+#include "ans_errno.h"
 
 struct iperf_test;
 struct iperf_stream_result;

@@ -26,7 +26,7 @@
  */
 
 /*
- * routines related to collection TCP_INFO using getsockopt()
+ * routines related to collection TCP_INFO using anssock_getsockopt()
  *
  * Brian Tierney, ESnet  (bltierney@es.net)
  *
@@ -99,7 +99,7 @@ save_tcpinfo(struct iperf_stream *sp, struct iperf_interval_results *irp)
 	defined(TCP_INFO)
     socklen_t tcp_info_length = sizeof(struct tcp_info);
 
-    if (getsockopt(sp->socket, IPPROTO_TCP, TCP_INFO, (void *)&irp->tcpInfo, &tcp_info_length) < 0)
+    if (anssock_getsockopt(sp->socket, IPPROTO_TCP, TCP_INFO, (void *)&irp->tcpInfo, &tcp_info_length) < 0)
 	iperf_err(sp->test, "getsockopt - %s", strerror(errno));
 
     if (sp->test->debug) {
