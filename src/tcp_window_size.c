@@ -60,6 +60,8 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <assert.h>
+#include "anssock_intf.h"
+#include "ans_errno.h"
 
 /* -------------------------------------------------------------------
  * If bufsize > 0, set the TCP window size (via the socket buffer
