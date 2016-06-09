@@ -19,14 +19,8 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
 
-/* Define to 1 if you have the <netinet/sctp.h> header file. */
-#define HAVE_NETINET_SCTP_H 1
-
 /* Define to 1 if you have the `sched_setaffinity' function. */
 #define HAVE_SCHED_SETAFFINITY 1
-
-/* Have SCTP support. */
-#define HAVE_SCTP 1
 
 /* Define to 1 if you have the `sendfile' function. */
 #define HAVE_SENDFILE 1
@@ -45,9 +39,6 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
-
-/* Define to 1 if the system has the type `struct sctp_assoc_value'. */
-#define HAVE_STRUCT_SCTP_ASSOC_VALUE 1
 
 /* Define to 1 if you have the <sys/socket.h> header file. */
 #define HAVE_SYS_SOCKET_H 1
