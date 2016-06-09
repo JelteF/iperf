@@ -108,6 +108,10 @@ main(int argc, char **argv)
         exit(1);
     }
 
+    if (anssock_init(NULL) != 0) {
+        printf("init sock failed \n");
+    }
+
     if (run(test) < 0)
         iperf_errexit(test, "error - %s", iperf_strerror(i_errno));
 
