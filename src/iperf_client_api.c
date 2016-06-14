@@ -62,7 +62,7 @@ iperf_create_streams(struct iperf_test *test)
         struct epoll_event ev;
         ev.data.fd = s;
         if (test->sender)
-            ev.events=EPOLLOUT;
+            ev.events=EPOLLOUT | EPOLLIN;
         else
             ev.events=EPOLLIN;
         if(anssock_epoll_ctl(test->epoll_fd, EPOLL_CTL_ADD, s, &ev)==-1) {
