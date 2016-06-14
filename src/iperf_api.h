@@ -70,6 +70,7 @@ struct iperf_stream;
 #define DISPLAY_RESULTS 14
 #define IPERF_START 15
 #define IPERF_DONE 16
+#define SETUP_COOKIE 17
 #define ACCESS_DENIED (-1)
 #define SERVER_ERROR (-2)
 
