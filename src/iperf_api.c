@@ -1666,6 +1666,7 @@ JSON_write(int fd, cJSON *json)
         if (Nwrite(fd, data, full_size, Ptcp) < 0)
             r = -1;
         free(str);
+        free(data);
     }
     return r;
 }
