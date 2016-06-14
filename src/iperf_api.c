@@ -1649,8 +1649,8 @@ get_results(struct iperf_test *test)
 static int
 JSON_write(int fd, cJSON *json)
 {
-    uint32_t hsize, nsize;
-    char *str;
+    uint32_t hsize, nsize, full_size;
+    char *str, *data;
     int r = 0;
 
     str = cJSON_PrintUnformatted(json);
@@ -1659,12 +1659,12 @@ JSON_write(int fd, cJSON *json)
     else {
         hsize = strlen(str);
         nsize = htonl(hsize);
-        if (Nwrite(fd, (char*) &nsize, sizeof(nsize), Ptcp) < 0)
+        full_size = hsize + 4 + 1;
+        data = malloc(full_size);
+        memcpy(data, &nsize, 4);
+        memcpy(data + 4, str, hsize + 1);
+        if (Nwrite(fd, data, full_size, Ptcp) < 0)
             r = -1;
-        else {
-            if (Nwrite(fd, str, hsize, Ptcp) < 0)
-                r = -1;
-        }
         free(str);
     }
     return r;

@@ -170,17 +170,10 @@ iperf_accept(struct iperf_test *test)
             return -1;
         }
 
+        setnonblocking(test->ctrl_sck, 1);
+
         if (iperf_set_send_state(test, PARAM_EXCHANGE) != 0)
             return -1;
-        if (iperf_exchange_parameters(test) < 0)
-            return -1;
-        if (test->server_affinity != -1)
-            if (iperf_setaffinity(test, test->server_affinity) != 0)
-                return -1;
-        if (test->on_connect)
-            test->on_connect(test);
-
-        // setnonblocking(test->ctrl_sck, 1);
     } else {
         /*
          * Don't try to read from the socket.  It could block an ongoing test.
@@ -204,6 +197,24 @@ iperf_handle_message_server(struct iperf_test *test)
 {
     int rval;
     struct iperf_stream *sp;
+    int prev_state = test->state;
+
+    // Finish setup of connection. Needed because control socket is non
+    // blocking.
+    switch(test->state) {
+        case PARAM_EXCHANGE:
+            if (iperf_exchange_parameters(test) < 0) {
+                printf("failed at param exchange\n");
+                return -1;
+            }
+            printf("test->state=%d\n", test->state);
+            if (test->server_affinity != -1)
+                if (iperf_setaffinity(test, test->server_affinity) != 0)
+                    return -1;
+            if (test->on_connect)
+                test->on_connect(test);
+            return 0;
+    }
 
     // XXX: Need to rethink how this behaves to fit API
     if ((rval = Nread(test->ctrl_sck, (char*) &test->state, sizeof(signed char), Ptcp)) <= 0) {
@@ -259,8 +270,9 @@ iperf_handle_message_server(struct iperf_test *test)
             test->state = IPERF_DONE;
             break;
         default:
-            i_errno = IEMESSAGE;
-            return -1;
+            printf("An unknown state was sent by the client, ignoring it.\n");
+            test->state = prev_state;
+            break;
     }
 
     return 0;
