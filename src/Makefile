@@ -27,7 +27,7 @@ SRCS-y := cjson.c iperf_client_api.c iperf_locale.c iperf_server_api.c \
 	iperf_tcp.c iperf_util.c net.c tcp_window_size.c
 
 
-CFLAGS += -O3 -g
+CFLAGS += -O3 -g --std=gnu99
 #CFLAGS += $(WERROR_FLAGS)
 CFLAGS += -I$(ODP_PATH)/include
 
