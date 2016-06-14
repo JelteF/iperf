@@ -156,8 +156,10 @@ iperf_accept(struct iperf_test *test)
     if (test->ctrl_sck == -1) {
         /* Server free, accept new client */
         test->ctrl_sck = s;
-        // setnonblocking(test->ctrl_sck, 1);
-        test->state = SETUP_COOKIE;
+        // if (Nread(test->ctrl_sck, test->cookie, COOKIE_SIZE, Ptcp) < 0) {
+        //     i_errno = IERECVCOOKIE;
+        //     return -1;
+        // }
 
         struct epoll_event ev;
         ev.events=EPOLLIN;
@@ -167,6 +169,10 @@ iperf_accept(struct iperf_test *test)
             perror("epoll_ctl: ctrl_sck register failed");
             return -1;
         }
+
+        if (iperf_set_send_state(test, PARAM_EXCHANGE) != 0)
+            return -1;
+        // setnonblocking(test->ctrl_sck, 1);
     } else {
         /*
          * Don't try to read from the socket.  It could block an ongoing test.
@@ -195,14 +201,6 @@ iperf_handle_message_server(struct iperf_test *test)
     // Finish setup of connection. Needed because control socket is non
     // blocking.
     switch(test->state) {
-        case SETUP_COOKIE:
-            if (Nread(test->ctrl_sck, test->cookie, COOKIE_SIZE, Ptcp) < 0) {
-                i_errno = IERECVCOOKIE;
-                return -1;
-            }
-            if (iperf_set_send_state(test, PARAM_EXCHANGE) != 0)
-                return -1;
-            return 1;
         case PARAM_EXCHANGE:
             if (iperf_exchange_parameters(test) < 0) {
                 printf("failed at param exchange\n");
