@@ -111,19 +111,19 @@ iperf_tcp_accept(struct iperf_test * test)
         return -1;
     }
 
-    if (Nread(s, cookie, COOKIE_SIZE, Ptcp) < 0) {
-        i_errno = IERECVCOOKIE;
-        return -1;
-    }
+    // if (Nread(s, cookie, COOKIE_SIZE, Ptcp) < 0) {
+    //     i_errno = IERECVCOOKIE;
+    //     return -1;
+    // }
 
-    if (strcmp(test->cookie, cookie) != 0) {
-        if (Nwrite(s, (char*) &rbuf, sizeof(rbuf), Ptcp) < 0) {
-            i_errno = IESENDMESSAGE;
-            return -1;
-        }
-        close(s);
-        return -2; // Return special value when closed
-    }
+    // if (strcmp(test->cookie, cookie) != 0) {
+    //     if (Nwrite(s, (char*) &rbuf, sizeof(rbuf), Ptcp) < 0) {
+    //         i_errno = IESENDMESSAGE;
+    //         return -1;
+    //     }
+    //     close(s);
+    //     return -2; // Return special value when closed
+    // }
 
     return s;
 }
@@ -512,13 +512,13 @@ iperf_tcp_connect(struct iperf_test *test)
     freeaddrinfo(server_res);
 
     /* Send cookie for verification */
-    if (Nwrite(s, test->cookie, COOKIE_SIZE, Ptcp) < 0) {
-        saved_errno = errno;
-        close(s);
-        errno = saved_errno;
-        i_errno = IESENDCOOKIE;
-        return -1;
-    }
+    // if (Nwrite(s, test->cookie, COOKIE_SIZE, Ptcp) < 0) {
+    //     saved_errno = errno;
+    //     close(s);
+    //     errno = saved_errno;
+    //     i_errno = IESENDCOOKIE;
+    //     return -1;
+    // }
 
     return s;
 }

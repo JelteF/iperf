@@ -293,7 +293,7 @@ iperf_connect(struct iperf_test *test)
         return -1;
     }
 
-    make_cookie(test->cookie);
+    // make_cookie(test->cookie);
 
     /* Create and connect the control channel */
     if (test->ctrl_sck < 0)
@@ -304,10 +304,10 @@ iperf_connect(struct iperf_test *test)
         return -1;
     }
 
-    if (Nwrite(test->ctrl_sck, test->cookie, COOKIE_SIZE, Ptcp) < 0) {
-        i_errno = IESENDCOOKIE;
-        return -1;
-    }
+    // if (Nwrite(test->ctrl_sck, test->cookie, COOKIE_SIZE, Ptcp) < 0) {
+    //     i_errno = IESENDCOOKIE;
+    //     return -1;
+    // }
 
     struct epoll_event ev;
     ev.events=EPOLLIN;

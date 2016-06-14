@@ -156,10 +156,10 @@ iperf_accept(struct iperf_test *test)
     if (test->ctrl_sck == -1) {
         /* Server free, accept new client */
         test->ctrl_sck = s;
-        if (Nread(test->ctrl_sck, test->cookie, COOKIE_SIZE, Ptcp) < 0) {
-            i_errno = IERECVCOOKIE;
-            return -1;
-        }
+        // if (Nread(test->ctrl_sck, test->cookie, COOKIE_SIZE, Ptcp) < 0) {
+        //     i_errno = IERECVCOOKIE;
+        //     return -1;
+        // }
 
         struct epoll_event ev;
         ev.events=EPOLLIN;
