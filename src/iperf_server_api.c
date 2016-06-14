@@ -170,7 +170,7 @@ iperf_accept(struct iperf_test *test)
             return -1;
         }
 
-        setnonblocking(test->ctrl_sck, 1);
+        // setnonblocking(test->ctrl_sck, 1);
 
         if (iperf_set_send_state(test, PARAM_EXCHANGE) != 0)
             return -1;
@@ -564,7 +564,7 @@ iperf_run_server(struct iperf_test *test)
                          */
                         if (test->protocol->id != Pudp ||
                             !test->sender) {
-                            setnonblocking(s, 1);
+                            // setnonblocking(s, 1);
                         }
 
                         streams_accepted++;
