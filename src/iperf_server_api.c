@@ -562,10 +562,7 @@ iperf_run_server(struct iperf_test *test)
                          * We need this to allow a server receiver to
                          * maintain interactivity with the control channel.
                          */
-                        if (test->protocol->id != Pudp ||
-                            !test->sender) {
-                            setnonblocking(s, 1);
-                        }
+                        setnonblocking(s, 1);
 
                         streams_accepted++;
                         if (test->on_new_stream)
