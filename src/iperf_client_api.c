@@ -381,7 +381,7 @@ iperf_run_client(struct iperf_test * test)
     while (test->state != IPERF_DONE) {
         (void) gettimeofday(&now, NULL);
         timeout = tmr_timeout(&now);
-        number_of_events = epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, -1);
+        number_of_events = epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, 0);
         if (number_of_events < 0 && errno != EINTR) {
             i_errno = IESELECT;
             return -1;
