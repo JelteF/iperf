@@ -381,7 +381,7 @@ iperf_run_client(struct iperf_test * test)
     while (test->state != IPERF_DONE) {
         (void) gettimeofday(&now, NULL);
         timeout = tmr_timeout(&now);
-        number_of_events = anssock_epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, -1);
+        number_of_events = anssock_epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, 0);
         if (number_of_events < 0 && errno != EINTR) {
             i_errno = IESELECT;
             return -1;
@@ -399,10 +399,8 @@ iperf_run_client(struct iperf_test * test)
                     startup = 0;
 
                     // Set non-blocking for non-UDP tests
-                    if (test->protocol->id != Pudp) {
-                        SLIST_FOREACH(sp, &test->streams, streams) {
-                            // setnonblocking(sp->socket, 1);
-                        }
+                    SLIST_FOREACH(sp, &test->streams, streams) {
+                        // setnonblocking(sp->socket, 1);
                     }
                 }
 
@@ -425,13 +423,6 @@ iperf_run_client(struct iperf_test * test)
                     ((test->duration != 0 && test->done) ||
                      (test->settings->bytes != 0 && test->bytes_sent >= test->settings->bytes) ||
                      (test->settings->blocks != 0 && test->blocks_sent >= test->settings->blocks))) {
-
-                    // Unset non-blocking for non-UDP tests
-                    if (test->protocol->id != Pudp) {
-                        SLIST_FOREACH(sp, &test->streams, streams) {
-                            // setnonblocking(sp->socket, 0);
-                        }
-                    }
 
                     /* Yes, done!  Send TEST_END. */
                     test->done = 1;

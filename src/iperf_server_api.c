@@ -497,7 +497,7 @@ iperf_run_server(struct iperf_test *test)
 
         (void) gettimeofday(&now, NULL);
         timeout = tmr_timeout(&now);
-        number_of_events = anssock_epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, -1);
+        number_of_events = anssock_epoll_wait(test->epoll_fd, events, MAX_EPOLL_EVENTS, 0);
         if (number_of_events < 0 && errno != EINTR) {
             cleanup_server(test);
             i_errno = IESELECT;
@@ -561,10 +561,7 @@ iperf_run_server(struct iperf_test *test)
                          * We need this to allow a server receiver to
                          * maintain interactivity with the control channel.
                          */
-                        if (test->protocol->id != Pudp ||
-                            !test->sender) {
-                            // setnonblocking(s, 1);
-                        }
+                        // setnonblocking(s, 1);
 
                         streams_accepted++;
                         if (test->on_new_stream)
