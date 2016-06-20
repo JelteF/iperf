@@ -199,6 +199,13 @@ iperf_handle_message_client(struct iperf_test *test)
     int rval;
     int32_t err;
     int prev_state = test->state;
+    switch(test->state) {
+        case EXCHANGE_RESULTS_SERVER:
+            if (iperf_exchange_results(test, 's') < 0)
+                return -1;
+            test->state = DISPLAY_RESULTS;
+            return 0;
+    }
 
     /*!!! Why is this read() and not Nread()? */
     if ((rval = read(test->ctrl_sck, (char*) &test->state, sizeof(signed char))) <= 0) {
@@ -235,9 +242,12 @@ iperf_handle_message_client(struct iperf_test *test)
             break;
         case TEST_RUNNING:
             break;
-        case EXCHANGE_RESULTS:
-            if (iperf_exchange_results(test) < 0)
+        case EXCHANGE_RESULTS_CLIENT:
+            if (iperf_exchange_results(test, 'c') < 0)
                 return -1;
+            test->state = EXCHANGE_RESULTS_SERVER;
+            return 0;
+        case EXCHANGE_RESULTS_SERVER:
             break;
         case DISPLAY_RESULTS:
             if (test->on_test_finish)
@@ -319,6 +329,7 @@ iperf_connect(struct iperf_test *test)
         perror("epoll_ctl: ctrl_sck register failed");
         return -1;
     }
+    setnonblocking(test->ctrl_sck, 1);
 
     return 0;
 }

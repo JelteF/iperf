@@ -1265,21 +1265,15 @@ iperf_exchange_parameters(struct iperf_test *test)
 /*************************************************************/
 
 int
-iperf_exchange_results(struct iperf_test *test)
+iperf_exchange_results(struct iperf_test *test, char role)
 {
-    if (test->role == 'c') {
-        /* Send results to server. */
+    if (test->role == role) {
+        /* Send results to other. */
         if (send_results(test) < 0)
-            return -1;
-        /* Get server results. */
-        if (get_results(test) < 0)
             return -1;
     } else {
-        /* Get client results. */
+        /* Get results from other. */
         if (get_results(test) < 0)
-            return -1;
-        /* Send results to client. */
-        if (send_results(test) < 0)
             return -1;
     }
     return 0;

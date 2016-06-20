@@ -66,10 +66,11 @@ struct iperf_stream;
 #define CREATE_STREAMS 10
 #define SERVER_TERMINATE 11
 #define CLIENT_TERMINATE 12
-#define EXCHANGE_RESULTS 13
-#define DISPLAY_RESULTS 14
-#define IPERF_START 15
-#define IPERF_DONE 16
+#define EXCHANGE_RESULTS_CLIENT 13
+#define EXCHANGE_RESULTS_SERVER 14
+#define DISPLAY_RESULTS 15
+#define IPERF_START 16
+#define IPERF_DONE 17
 #define ACCESS_DENIED (-1)
 #define SERVER_ERROR (-2)
 
@@ -218,7 +219,7 @@ void iperf_got_sigend(struct iperf_test *test) __attribute__ ((noreturn));
 void usage();
 void usage_long();
 void warning(char *);
-int iperf_exchange_results(struct iperf_test *);
+int iperf_exchange_results(struct iperf_test *, char role);
 int iperf_init_test(struct iperf_test *);
 int iperf_create_send_timers(struct iperf_test *);
 int iperf_parse_arguments(struct iperf_test *, int, char **);
