@@ -207,7 +207,6 @@ iperf_handle_message_server(struct iperf_test *test)
                 printf("failed at param exchange\n");
                 return -1;
             }
-            printf("test->state=%d\n", test->state);
             if (test->server_affinity != -1)
                 if (iperf_setaffinity(test, test->server_affinity) != 0)
                     return -1;
