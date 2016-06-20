@@ -212,8 +212,13 @@ iperf_handle_message_server(struct iperf_test *test)
             if (test->on_connect)
                 test->on_connect(test);
             return 0;
-        case EXCHANGE_RESULTS:
-            if (iperf_exchange_results(test) < 0)
+        case EXCHANGE_RESULTS_CLIENT:
+            if (iperf_exchange_results(test, 'c') < 0)
+                return -1;
+            test->state = EXCHANGE_RESULTS_SERVER;
+            return 0;
+        case EXCHANGE_RESULTS_SERVER:
+            if (iperf_exchange_results(test, 's') < 0)
                 return -1;
             if (iperf_set_send_state(test, DISPLAY_RESULTS) != 0)
                 return -1;
@@ -246,7 +251,7 @@ iperf_handle_message_server(struct iperf_test *test)
                 anssock_close(sp->socket);
             }
             test->reporter_callback(test);
-            if (iperf_set_send_state(test, EXCHANGE_RESULTS) != 0)
+            if (iperf_set_send_state(test, EXCHANGE_RESULTS_CLIENT) != 0)
                 return -1;
             break;
         case IPERF_DONE:
