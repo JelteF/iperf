@@ -206,12 +206,19 @@ iperf_handle_message_server(struct iperf_test *test)
                 printf("failed at param exchange\n");
                 return -1;
             }
-            printf("test->state=%d\n", test->state);
             if (test->server_affinity != -1)
                 if (iperf_setaffinity(test, test->server_affinity) != 0)
                     return -1;
             if (test->on_connect)
                 test->on_connect(test);
+            return 0;
+        case EXCHANGE_RESULTS:
+            if (iperf_exchange_results(test) < 0)
+                return -1;
+            if (iperf_set_send_state(test, DISPLAY_RESULTS) != 0)
+                return -1;
+            if (test->on_test_finish)
+                test->on_test_finish(test);
             return 0;
     }
 
@@ -241,12 +248,6 @@ iperf_handle_message_server(struct iperf_test *test)
             test->reporter_callback(test);
             if (iperf_set_send_state(test, EXCHANGE_RESULTS) != 0)
                 return -1;
-            if (iperf_exchange_results(test) < 0)
-                return -1;
-            if (iperf_set_send_state(test, DISPLAY_RESULTS) != 0)
-                return -1;
-            if (test->on_test_finish)
-                test->on_test_finish(test);
             break;
         case IPERF_DONE:
             break;

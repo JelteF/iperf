@@ -198,6 +198,7 @@ iperf_handle_message_client(struct iperf_test *test)
 {
     int rval;
     int32_t err;
+    int prev_state = test->state;
 
     /*!!! Why is this anssock_read() and not Nread()? */
     if ((rval = anssock_read(test->ctrl_sck, (char*) &test->state, sizeof(signed char))) <= 0) {
@@ -274,8 +275,9 @@ iperf_handle_message_client(struct iperf_test *test)
             errno = ntohl(err);
             return -1;
         default:
-            i_errno = IEMESSAGE;
-            return -1;
+            printf("An unknown state was sent by the client, ignoring it.\n");
+            test->state = prev_state;
+            break;
     }
 
     return 0;
